@@ -9,7 +9,7 @@ pub struct MultiLineComment {
 }
 
 impl MultiLineComment {
-    pub fn from( start : & str, line : & str, end : & str, text : & str ) -> MultiLineComment {
+    pub fn new( start : & str, line : & str, end : & str, text : & str ) -> MultiLineComment {
         MultiLineComment {
             start : String::from( start ),
             line : String::from( line ),
@@ -25,7 +25,7 @@ impl MultiLineComment {
 
 impl Element for MultiLineComment {
     fn to_source_code( & self, indent : usize ) -> String {
-        let mut source = String::from( "" );
+        let mut source = String::new();
 
         if self.text.is_empty() {
             return source;
@@ -75,7 +75,7 @@ mod tests {
      */
     #[test]
     fn multi_line_single() {
-        let c1 = MultiLineComment::from(
+        let c1 = MultiLineComment::new(
             "/**",
             " *",
             "*/",
@@ -93,7 +93,7 @@ mod tests {
      */
     #[test]
     fn multi_line() {
-        let c1 = MultiLineComment::from(
+        let c1 = MultiLineComment::new(
             "/**",
             " *",
             " */",
