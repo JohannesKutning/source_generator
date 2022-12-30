@@ -8,7 +8,7 @@ pub struct SingleLineComment {
 
 impl SingleLineComment
 {
-    pub fn from( start : & str, text : & str ) -> SingleLineComment {
+    pub fn new( start : & str, text : & str ) -> SingleLineComment {
         SingleLineComment {
             start : String::from( start ),
             text : String::from( text )
@@ -27,7 +27,7 @@ impl SingleLineComment
 
 impl Element for SingleLineComment {
     fn to_source_code( & self, indent : usize ) -> String {
-        let mut source = String::from( "" );
+        let mut source = String::new();
 
         if self.text.is_empty() {
             return source;
@@ -65,7 +65,7 @@ mod tests {
      */
     #[test]
     fn single_line() {
-        let c1 = SingleLineComment::from(
+        let c1 = SingleLineComment::new(
             "//!",
             "Single line comment"
         );
@@ -81,7 +81,7 @@ mod tests {
      */
     #[test]
     fn single_makefile() {
-        let c1 = SingleLineComment::from(
+        let c1 = SingleLineComment::new(
             "#",
             "A single line Makefile comment"
         );
@@ -97,7 +97,7 @@ mod tests {
      */
     #[test]
     fn single_line_multi() {
-        let c1 = SingleLineComment::from(
+        let c1 = SingleLineComment::new(
             "//!",
             "First line\nsecond line\n\n fourth line"
         );
@@ -120,7 +120,7 @@ mod tests {
      */
     #[test]
     fn single_vhdl() {
-        let c1 = SingleLineComment::from(
+        let c1 = SingleLineComment::new(
             "--!",
             "First line\nsecond line\n\n fourth line"
         );
