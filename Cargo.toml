@@ -1,5 +1,5 @@
 [package]
-name = "sourcegen"
+name = "source_generator"
 version = "0.1.0"
 authors = ["Johannes Kutning"]
 edition = "2018"
@@ -8,3 +8,5 @@ edition = "2018"
 
 [dependencies]
 chrono = "0.4"
+itertools = "0.8"
+linked_hash_set = "0.1.4"
