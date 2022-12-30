@@ -15,7 +15,7 @@ impl SingleLineComment
         }
     }
 
-    pub fn add( & mut self, text : String )
+    pub fn add_line( & mut self, text : String )
     {
         self.text.push_str( & text );
     }
@@ -50,7 +50,7 @@ impl Element for SingleLineComment {
 
 impl std::fmt::Display for SingleLineComment {
     fn fmt( & self, f : & mut std::fmt::Formatter<'_> ) -> std::fmt::Result {
-        write!( f, "{}", self.source( 0 ) )
+        write!( f, "{}", self.to_source_code( 0 ) )
     }
 }
 
@@ -71,7 +71,7 @@ mod tests {
         );
 
         assert_eq!(
-            c1.source( 1 ),
+            c1.to_source_code( 1 ),
             String::from( "    //! Single line comment\n" )
         );
     }
@@ -87,7 +87,7 @@ mod tests {
         );
 
         assert_eq!(
-            c1.source( 0 ),
+            c1.to_source_code( 0 ),
             String::from( "# A single line Makefile comment\n" )
         );
     }
@@ -103,7 +103,7 @@ mod tests {
         );
 
         assert_eq!(
-            c1.source( 0 ),
+            c1.to_source_code( 0 ),
             String::from(
                 concat!(
                     "//! First line\n",
@@ -126,7 +126,7 @@ mod tests {
         );
 
         assert_eq!(
-            c1.source( 0 ),
+            c1.to_source_code( 0 ),
             String::from(
                 concat!(
                     "--! First line\n",
