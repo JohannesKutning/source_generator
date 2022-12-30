@@ -15,28 +15,6 @@ impl SingleLineComment
         }
     }
 
-    pub fn source( & self, indent : usize ) -> String {
-        let mut source = String::from( "" );
-
-        if self.text.is_empty() {
-            return source;
-        }
-
-        let split = self.text.split( '\n' );
-        let indent_str = crate::util::indent( indent );
-
-        for i in split {
-            if i.len() == 0 {
-                source.push_str( & format!( "{}{}\n", indent_str, & self.start ) );
-            }
-            else {
-                source.push_str( & format!( "{}{} {}\n", indent_str, & self.start, i ) );
-            }
-        }
-
-        return source;
-    }
-
     pub fn add( & mut self, text : String )
     {
         self.text.push_str( & text );
