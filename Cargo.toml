@@ -11,3 +11,6 @@ chrono = "0.4"
 itertools = "0.8"
 linked_hash_set = "0.1.4"
 
+[[example]]
+name = "generate_vhdl_adder"
+test = true
