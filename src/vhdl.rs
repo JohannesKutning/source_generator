@@ -17,6 +17,8 @@ pub mod port_list;
 pub mod port;
 
 pub mod architecture;
+pub mod block_declarative_item;
+pub mod signal_declaration;
 pub mod signal_assignment;
 pub mod concurrent_statement;
 
