@@ -31,8 +31,8 @@ fn main() -> Result< (), std::io::Error > {
 mod tests {
     use super::*;
     #[test]
-    fn generate_vhdl_adder() {
-        main();
+    fn generate_vhdl_adder() -> Result< (), std::io::Error > {
+        main()
     }
 }
 
