@@ -19,5 +19,6 @@ pub const BUFFER : &'static str = "buffer";
 
 pub const ARCHITECTURE : &'static str = "architecture";
 pub const OF : &'static str = "of";
+pub const CONSTANT : &'static str = "constant";
 pub const SIGNAL : &'static str = "signal";
 
