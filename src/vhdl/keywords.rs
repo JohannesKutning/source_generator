@@ -21,4 +21,5 @@ pub const ARCHITECTURE : &'static str = "architecture";
 pub const OF : &'static str = "of";
 pub const CONSTANT : &'static str = "constant";
 pub const SIGNAL : &'static str = "signal";
+pub const PROCESS : &'static str = "process";
 
