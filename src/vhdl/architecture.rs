@@ -6,6 +6,7 @@ use crate::vhdl::constant_declaration::ConstantDeclaration;
 use crate::vhdl::signal_declaration::SignalDeclaraion;
 use crate::vhdl::concurrent_statement::ConcurrentStatement;
 use crate::vhdl::signal_assignment::SignalAssignment;
+use crate::vhdl::process::Process;
 
 pub struct Architecture {
     name : String,
@@ -30,6 +31,10 @@ impl Architecture {
 
     pub fn add_signal_assignment( & mut self, signal_assignment : SignalAssignment ) {
         self.statements.push( Box::< SignalAssignment >::new( signal_assignment ) );
+    }
+
+    pub fn add_process( & mut self, process : Process ) {
+        self.statements.push( Box::< Process >::new( process ) );
     }
 }
 
