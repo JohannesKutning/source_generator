@@ -22,4 +22,5 @@ pub const OF : &'static str = "of";
 pub const CONSTANT : &'static str = "constant";
 pub const SIGNAL : &'static str = "signal";
 pub const PROCESS : &'static str = "process";
+pub const VARIABLE : &'static str = "variable";
 
