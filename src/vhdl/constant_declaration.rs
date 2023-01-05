@@ -1,6 +1,7 @@
 use crate::element::Element;
 use crate::vhdl::keywords::*;
 use crate::vhdl::block_declarative_item::BlockDeclarativeItem;
+use crate::vhdl::process_declarative_item::ProcessDeclarativeItem;
 
 pub struct ConstantDeclaration {
     name : String,
@@ -33,6 +34,9 @@ impl Element for ConstantDeclaration {
 }
 
 impl BlockDeclarativeItem for ConstantDeclaration {
+}
+
+impl ProcessDeclarativeItem for ConstantDeclaration {
 }
 
 //------------------------------------------------------------------------------
