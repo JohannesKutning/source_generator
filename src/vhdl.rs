@@ -20,6 +20,9 @@ pub mod architecture;
 pub mod block_declarative_item;
 pub mod constant_declaration;
 pub mod signal_declaration;
-pub mod signal_assignment;
 pub mod concurrent_statement;
+pub mod signal_assignment;
+pub mod process;
+pub mod sensitivity_list;
+pub mod process_declarative_item;
 
