@@ -45,3 +45,30 @@ impl Element for VhdlFile {
     }
 }
 
+//------------------------------------------------------------------------------
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn new() {
+        let file = VhdlFile::new( "test" );
+        assert_eq!( "test", file.get_file_name() );
+    }
+
+    #[test]
+    fn add_entity() {
+        let mut file = VhdlFile::new( "test" );
+        file.add_entity( Entity::new( "test" ) );
+        let expected = "entity test is\nbegin\nend entity test;\n\n";
+        assert_eq!( expected, file.to_source_code( 0 ) );
+    }
+
+    #[test]
+    fn add_architecture() {
+        let mut file = VhdlFile::new( "test" );
+        file.add_architecture( Architecture::new( "arch", "test" ) );
+        let expected = "architecture arch of test is\nbegin\nend architecture arch;\n\n";
+        assert_eq!( expected, file.to_source_code( 0 ) );
+    }
+}
+
