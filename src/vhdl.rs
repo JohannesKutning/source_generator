@@ -15,6 +15,8 @@ pub mod generic_list;
 pub mod generic;
 pub mod port_list;
 pub mod port;
+pub mod entity_interface;
+pub mod entity_interface_description;
 
 pub mod architecture;
 pub mod block_declarative_item;

@@ -9,20 +9,22 @@ use crate::vhdl::generic_list::GenericList;
 use crate::vhdl::generic::Generic;
 use crate::vhdl::port_list::PortList;
 use crate::vhdl::port::Port;
+use crate::vhdl::entity_interface::EntityInterface;
 
 pub struct Entity {
     name : String,
     description : SingleLineComment,
     libraries : LibraryList,
     generics : GenericList,
-    ports : PortList
+    ports : PortList,
+    interfaces : Vec< EntityInterface >,
 }
 
 impl Entity {
     pub fn new( name : & str ) -> Entity {
         Entity { name : String::from( name ), description : SingleLineComment::new(),
                 libraries : LibraryList::new(), generics : GenericList::new(),
-                ports : PortList::new() }
+                ports : PortList::new(), interfaces : Vec::new() }
     }
 
     pub fn add_description( & mut self, text : & str ) {
@@ -47,6 +49,10 @@ impl Entity {
 
     pub fn add_port( & mut self, port : Port ) {
         self.ports.add_port( port );
+    }
+
+    pub fn add_interface( & mut self, interface : EntityInterface ) {
+        self.interfaces.push( interface );
     }
 }
 

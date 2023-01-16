@@ -1,5 +1,6 @@
 use crate::element::Element;
 
+#[derive(Clone)]
 pub struct Generic {
     name : String,
     data_type : String,
@@ -19,6 +20,14 @@ impl Generic {
         Generic{ name : name.to_string(), data_type : data_type.to_string(),
                 default : default.to_string() }
 
+    }
+
+    pub fn get_name( & self ) -> & String {
+        & self.name
+    }
+
+    pub fn set_name( & mut self, name : & str ) {
+        self.name = name.to_string();
     }
 }
 

@@ -22,6 +22,18 @@ impl Port {
                 default : default.to_string() }
 
     }
+
+    pub fn get_name( & self ) -> & String {
+        & self.name
+    }
+
+    pub fn set_name( & mut self, name : & str ) {
+        self.name = name.to_string();
+    }
+
+    pub fn invert( & self ) -> Port {
+        Port::new_with_default( & self.name, self.direction.invert(), & self.data_type, & self.default )
+    }
 }
 
 impl Element for Port {
