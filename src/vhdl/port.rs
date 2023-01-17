@@ -25,9 +25,6 @@ impl Port {
                 default : default.to_string() }
     }
 
-    pub fn from_json( _description : & str ) {
-    }
-
     pub fn clone_invert( & self ) -> Port {
         Port::new_with_default( & self.name, self.direction.invert(), & self.data_type,
             & self.default )
