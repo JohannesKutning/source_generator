@@ -1,0 +1,72 @@
+{
+    "$schema" : "http://json-schema.org/schema#",
+    "title" : "reggen-register description",
+    "description" : "Schema for a reggen register description.",
+    "definitions" : {
+        "Generic" : {
+            "type" : "object",
+            "description" : "A generic description",
+            "properties" : {
+                "name" : {
+                    "description" : "Generic identifer",
+                    "type" : "string"
+                },
+                "data_type" : {
+                    "description" : "The generics data type",
+                    "type"        : "string"
+                },
+                "default" : {
+                    "description" : "The default value",
+                    "type"        : "string"
+                }
+            },
+            "required" : [ "name", "data_type" ]
+        },
+        "Port" : {
+            "type" : "object",
+            "description" : "A port description",
+            "properties" : {
+                "name" : {
+                    "description" : "Port identifer",
+                    "type" : "string"
+                },
+                "direction" : {
+                    "description" : "The ports data type",
+                    "enum" : [ "in", "out", "inout", "buffer" ]
+                },
+                "data_type" : {
+                    "description" : "The ports data type",
+                    "type"        : "string"
+                },
+                "default" : {
+                    "description" : "The default value",
+                    "type"        : "string"
+                }
+            },
+            "required" : [ "name", "direction", "data_type" ]
+        }
+    },
+    "type" : "object",
+    "properties" : {
+        "name" : {
+            "description" : "Interface name",
+            "type"        : "string"
+        },
+        "generics" : {
+            "description" : "Array of generics",
+            "type" : "array",
+            "items": {
+                "oneOf": [ { "$ref" : "#/definitions/Generic" } ]
+            }
+        },
+        "ports" : {
+            "description" : "Array of ports",
+            "type" : "array",
+            "items": {
+                "oneOf": [ { "$ref" : "#/definitions/Port" } ]
+            }
+        }
+    },
+	"required" : [ "name" ]
+}
+
