@@ -1,4 +1,7 @@
-#[derive(Debug, Clone, Copy)]
+use serde_derive::Deserialize;
+
+#[derive(Deserialize, Debug, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
 pub enum Direction {
     IN,
     OUT,
@@ -33,10 +36,61 @@ impl std::fmt::Display for Direction {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
+    use std::matches;
 
     #[test]
-    fn direction_in() {
+    fn deserialize_in() -> Result< (), Box< dyn Error > > {
+        let direction : Direction = serde_json::from_str( "\"in\"" )?;
+        assert!( matches!( direction, Direction::IN ) );
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_out() -> Result< (), Box< dyn Error > > {
+        let direction : Direction = serde_json::from_str( "\"out\"" )?;
+        assert!( matches!( direction, Direction::OUT ) );
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_inout() -> Result< (), Box< dyn Error > > {
+        let direction : Direction = serde_json::from_str( "\"inout\"" )?;
+        assert!( matches!( direction, Direction::INOUT ) );
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_buffer() -> Result< (), Box< dyn Error > > {
+        let direction : Direction = serde_json::from_str( "\"buffer\"" )?;
+        assert!( matches!( direction, Direction::BUFFER ) );
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_invalid() {
+        let ret : Result< Direction, serde_json::Error > = serde_json::from_str( "\"invalid\"" );
+        assert!( ret.is_err() );
+    }
+
+    #[test]
+    fn in_to_string() {
         assert_eq!( Direction::IN.to_string(), String::from( "in" ) );
+    }
+
+    #[test]
+    fn out_to_string() {
+        assert_eq!( Direction::OUT.to_string(), String::from( "out" ) );
+    }
+
+    #[test]
+    fn inout_to_string() {
+        assert_eq!( Direction::INOUT.to_string(), String::from( "inout" ) );
+    }
+
+    #[test]
+    fn buffer_to_string() {
+        assert_eq!( Direction::BUFFER.to_string(), String::from( "buffer" ) );
     }
 
     #[test]
