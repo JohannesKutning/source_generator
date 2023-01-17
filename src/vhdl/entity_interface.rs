@@ -19,6 +19,17 @@ impl EntityInterface {
             ports : Vec::new() }
     }
 
+    pub fn clone_invert( & self ) -> EntityInterface {
+        let mut inverted = EntityInterface::new( & self.name );
+        for generic in self.get_generics() {
+            inverted.add_generic( generic.clone() );
+        }
+        for port in self.get_ports() {
+            inverted.add_port( port.clone_invert() );
+        }
+        return inverted;
+    }
+
     pub fn add_generic( & mut self, generic : Generic ) {
         self.generics.push( generic );
     }
@@ -33,17 +44,6 @@ impl EntityInterface {
 
     pub fn get_ports( & self ) -> & Vec< Port > {
         & self.ports
-    }
-
-    pub fn invert( & self ) -> EntityInterface {
-        let mut inverted = EntityInterface::new( & self.name );
-        for generic in self.get_generics() {
-            inverted.add_generic( generic.clone() );
-        }
-        for port in self.get_ports() {
-            inverted.add_port( port.invert() );
-        }
-        return inverted;
     }
 }
 
@@ -117,7 +117,7 @@ mod tests {
         interface.add_port( Port::new_with_default( "b", Direction::OUT, "std_logic", "'0'" ) );
         interface.add_port( Port::new( "c", Direction::INOUT, "boolean" ) );
         interface.add_port( Port::new( "d", Direction::BUFFER, "positive" ) );
-        let inverted = interface.invert();
+        let inverted = interface.clone_invert();
         let mut source = String::new();
         for generic in inverted.get_generics() {
             source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
