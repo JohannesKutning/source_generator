@@ -1,7 +1,12 @@
+use std::error::Error;
+use std::fs;
+use std::path::Path;
+use serde_derive::Deserialize;
+use serde_json_schema::Schema;
 use crate::vhdl::generic::Generic;
 use crate::vhdl::port::Port;
-use crate::vhdl::entity_interface_description::EntityInterfaceDescription;
 
+#[derive(Deserialize, Debug)]
 pub struct EntityInterface {
     name : String,
     generics : Vec< Generic >,
@@ -14,9 +19,10 @@ impl EntityInterface {
             ports : Vec::new() }
     }
 
-    pub fn from_json( _description : & EntityInterfaceDescription ) -> EntityInterface {
-        EntityInterface { name : "".to_string(), generics : Vec::new(),
-            ports : Vec::new() }
+    pub fn with_file( file : & Path ) -> Result< EntityInterface, Box< dyn Error > > {
+        let schema = EntityInterface::read_schema()?;
+        let module = EntityInterface::read_and_validate_description( file, & schema )?;
+        Ok( module )
     }
 
     pub fn clone_invert( & self ) -> EntityInterface {
@@ -44,6 +50,25 @@ impl EntityInterface {
 
     pub fn get_ports( & self ) -> & Vec< Port > {
         & self.ports
+    }
+
+    fn read_schema() -> Result< Schema, Box< dyn Error > > {
+        let schema_file_name = "data/schema/entity_interface.json";
+        let schema_str = fs::read_to_string( schema_file_name )?;
+        let schema = Schema::try_from( schema_str )?;
+        Ok( schema )
+    }
+
+    fn read_and_validate_description( file : & Path, schema : & Schema )
+            -> Result< EntityInterface, Box< dyn Error > > {
+        let module_str = fs::read_to_string( file )?;
+        let module_json : serde_json::Value = serde_json::from_str( & module_str )?;
+        match schema.validate( & module_json ) {
+            Ok(_)   => {},
+            Err( err ) => { eprintln!( "Failed to validate the {:?}\n    with error {:?}",
+                file.to_string_lossy(), err ) }, };
+        let description : EntityInterface = serde_json::from_str( & module_str )?;
+        Ok( description )
     }
 }
 
@@ -103,8 +128,22 @@ mod tests {
         assert_eq!( GENERICS, source );
     }
 
+    #[test]
+    fn interface_from_json() -> Result< (), Box< dyn Error > > {
+        let interface = EntityInterface::with_file( Path::new( "tests/interface.json" ) )?;
+        let mut source = String::new();
+        for generic in interface.get_generics() {
+            source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
+        }
+        for port in interface.get_ports() {
+            source.push_str( & format!( "{}", port.to_source_code( 0 ) ) );
+        }
+        assert_eq!( format!( "{}{}", GENERICS, PORTS ), source );
+        Ok(())
+    }
+
     /**
-     * Create an entity interface with multiple generics but no ports
+     * Invert an entity interface with multiple generics and ports
      */
     #[test]
     fn invert_interface() {
