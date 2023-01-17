@@ -1,9 +1,11 @@
+use serde_derive::Deserialize;
 use crate::element::Element;
 
-#[derive(Clone)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Generic {
     name : String,
     data_type : String,
+    #[serde(default)]
     default : String
 }
 
@@ -50,30 +52,43 @@ impl Element for Generic {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
 
-    /**
-     * Create a generic without default value
-     */
+    const GENERIC : &'static str = "test : boolean";
+    const GENERIC_WITH_DEFAULT : &'static str = "test : boolean := true";
+
     #[test]
     fn generic() {
-        let port = Generic::new( "test", "boolean" );
-
-        assert_eq!(
-            port.to_source_code( 0 ),
-            String::from( "test : boolean" )
-        );
+        let generic = Generic::new( "test", "boolean" );
+        assert_eq!( generic.to_source_code( 0 ), GENERIC.to_string() );
     }
 
-    /**
-     * Create a generic with default value
-     */
     #[test]
     fn generic_with_default() {
-        let port = Generic::new_with_default( "test", "boolean", "true" );
+        let generic = Generic::new_with_default( "test", "boolean", "true" );
+        assert_eq!( generic.to_source_code( 0 ), GENERIC_WITH_DEFAULT.to_string() );
+    }
 
-        assert_eq!(
-            port.to_source_code( 0 ),
-            String::from( "test : boolean := true" )
-        );
+    #[test]
+    fn deserialize() -> Result< (), Box< dyn Error > > {
+        let generic : Generic = serde_json::from_str(
+            "{\"name\" : \"test\", \"data_type\" : \"boolean\"}" )?;
+        assert_eq!( generic.to_source_code( 0 ), GENERIC.to_string() );
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_with_default() -> Result< (), Box< dyn Error > > {
+        let generic : Generic = serde_json::from_str(
+            "{\"name\" : \"test\", \"data_type\" : \"boolean\", \"default\" : \"true\"}" )?;
+        assert_eq!( generic.to_source_code( 0 ), GENERIC_WITH_DEFAULT.to_string() );
+        Ok(())
+    }
+
+    #[test]
+    fn deserialize_invalid() {
+        let ret : Result< Generic, serde_json::Error > = serde_json::from_str( "\"invalid\"" );
+        assert!( ret.is_err() );
     }
 }
+
