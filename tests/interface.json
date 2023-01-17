@@ -1,0 +1,15 @@
+{
+    "name" : "test",
+    "generics" : [
+        { "name" : "A", "data_type" : "integer", "default" : "0" },
+        { "name" : "B", "data_type" : "std_logic", "default" : "'0'" },
+        { "name" : "C", "data_type" : "boolean" },
+        { "name" : "D", "data_type" : "positive" }
+    ],
+    "ports" : [
+        { "name" : "a", "direction" : "in", "data_type" : "integer", "default" : "0" },
+        { "name" : "b", "direction" : "out", "data_type" : "std_logic", "default" : "'0'" },
+        { "name" : "c", "direction" : "inout", "data_type" : "boolean" },
+        { "name" : "d", "direction" : "buffer", "data_type" : "positive" }
+    ]
+}
