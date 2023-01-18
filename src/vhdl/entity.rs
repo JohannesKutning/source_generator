@@ -52,6 +52,12 @@ impl Entity {
     }
 
     pub fn add_interface( & mut self, interface : EntityInterface ) {
+        for generic in interface.get_generics() {
+            self.add_generic( generic.clone() );
+        }
+        for port in interface.get_ports() {
+            self.add_port( port.clone() );
+        }
         self.interfaces.push( interface );
     }
 }
@@ -83,6 +89,8 @@ impl DesignUnit for Entity {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
+    use std::path::Path;
     use crate::vhdl::direction::Direction;
 
     const NAME : &'static str = "test";
@@ -107,6 +115,12 @@ mod tests {
         "library test;\n",
         "    use test.utility.all;\n",
         "\n" );
+    const INTERFACE : &'static str = concat!( "    generic (\n", "        A : integer := 0;\n",
+        "        B : std_logic := '0';\n", "        C : boolean;\n", "        D : positive\n",
+        "    );\n", "    port (\n", "        a : in integer := 0;\n",
+        "        b : out std_logic := '0';\n", "        c : inout boolean;\n",
+        "        d : buffer positive\n",
+        "    );\n" );
 
     /**
      * Create a entity with no description and content.
@@ -114,11 +128,7 @@ mod tests {
     #[test]
     fn entity_frame() {
         let entity = Entity::new( NAME );
-
-        assert_eq!(
-            entity.to_source_code( 0 ),
-            format!( "{}{}{}", HEADER, BEGIN, END )
-        );
+        assert_eq!( entity.to_source_code( 0 ), format!( "{}{}{}", HEADER, BEGIN, END ));
     }
 
     /**
@@ -171,6 +181,19 @@ mod tests {
             entity.to_source_code( 0 ),
             format!( "{}{}{}{}{}{}", DESCRIPTION, HEADER, GENERICS, PORTS, BEGIN, END )
         );
+    }
+
+    /**
+     * Create an entity with an interface
+     */
+    #[test]
+    fn entity_with_interface() -> Result< (), Box< dyn Error > > {
+        let interface = EntityInterface::with_file( Path::new( "tests/interface.json" ) )?;
+        let mut entity = Entity::new( NAME );
+        entity.add_interface( interface );
+        assert_eq!( entity.to_source_code( 0 ),
+            format!( "{}{}{}{}", HEADER, INTERFACE, BEGIN, END ) );
+        Ok(())
     }
 
     /**
