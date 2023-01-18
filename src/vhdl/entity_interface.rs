@@ -19,7 +19,7 @@ impl EntityInterface {
             ports : Vec::new() }
     }
 
-    pub fn with_file( file : & Path ) -> Result< EntityInterface, Box< dyn Error > > {
+    pub fn from_file( file : & Path ) -> Result< EntityInterface, Box< dyn Error > > {
         let schema = EntityInterface::read_schema()?;
         let module = EntityInterface::read_and_validate_description( file, & schema )?;
         Ok( module )
@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn interface_from_json() -> Result< (), Box< dyn Error > > {
-        let interface = EntityInterface::with_file( Path::new( "tests/interface.json" ) )?;
+        let interface = EntityInterface::from_file( Path::new( "tests/interface.json" ) )?;
         let mut source = String::new();
         for generic in interface.get_generics() {
             source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );

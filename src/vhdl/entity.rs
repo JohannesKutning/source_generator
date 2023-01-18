@@ -188,7 +188,7 @@ mod tests {
      */
     #[test]
     fn entity_with_interface() -> Result< (), Box< dyn Error > > {
-        let interface = EntityInterface::with_file( Path::new( "tests/interface.json" ) )?;
+        let interface = EntityInterface::from_file( Path::new( "tests/interface.json" ) )?;
         let mut entity = Entity::new( NAME );
         entity.add_interface( interface );
         assert_eq!( entity.to_source_code( 0 ),
