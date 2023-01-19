@@ -8,25 +8,39 @@ use crate::vhdl::port::Port;
 
 #[derive(Deserialize, Debug)]
 pub struct EntityInterface {
+    #[serde(default)]
     name : String,
+    class : String,
+    #[serde(default)]
     generics : Vec< Generic >,
+    #[serde(default)]
     ports : Vec< Port >,
 }
 
 impl EntityInterface {
-    pub fn new( name : & str ) -> EntityInterface {
-        EntityInterface { name : name.to_string(), generics : Vec::new(),
-            ports : Vec::new() }
+    pub fn new( name : & str, class : & str ) -> EntityInterface {
+        EntityInterface { name : name.to_string(), class : class.to_string(),
+            generics : Vec::new(), ports : Vec::new() }
     }
 
-    pub fn from_file( file : & Path ) -> Result< EntityInterface, Box< dyn Error > > {
+    pub fn new_unnamed( class : & str ) -> EntityInterface {
+        EntityInterface::new( "", class )
+    }
+
+    pub fn from_file( name : & str, filename : & Path ) -> Result< EntityInterface, Box< dyn Error > > {
+        let mut interface = EntityInterface::from_file_unnamed( filename )?;
+        interface.rename( name );
+        Ok( interface )
+    }
+
+    pub fn from_file_unnamed( file : & Path ) -> Result< EntityInterface, Box< dyn Error > > {
         let schema = EntityInterface::read_schema()?;
-        let module = EntityInterface::read_and_validate_description( file, & schema )?;
-        Ok( module )
+        let interface = EntityInterface::read_and_validate_description( file, & schema )?;
+        Ok( interface )
     }
 
     pub fn clone_invert( & self ) -> EntityInterface {
-        let mut inverted = EntityInterface::new( & self.name );
+        let mut inverted = EntityInterface::new( & self.name, & self.class );
         for generic in self.get_generics() {
             inverted.add_generic( generic.clone() );
         }
@@ -50,6 +64,10 @@ impl EntityInterface {
 
     pub fn get_ports( & self ) -> & Vec< Port > {
         & self.ports
+    }
+
+    pub fn rename( & mut self, name : & str ) {
+        self.name = name.to_string();
     }
 
     fn read_schema() -> Result< Schema, Box< dyn Error > > {
@@ -99,7 +117,7 @@ mod tests {
      */
     #[test]
     fn port_interface() {
-        let mut interface = EntityInterface::new( "test" );
+        let mut interface = EntityInterface::new_unnamed( "test" );
         interface.add_port( Port::new_with_default( "a", Direction::IN, "integer", "0" ) );
         interface.add_port( Port::new_with_default( "b", Direction::OUT, "std_logic", "'0'" ) );
         interface.add_port( Port::new( "c", Direction::INOUT, "boolean" ) );
@@ -116,7 +134,7 @@ mod tests {
      */
     #[test]
     fn generic_interface() {
-        let mut interface = EntityInterface::new( "test" );
+        let mut interface = EntityInterface::new_unnamed( "test" );
         interface.add_generic( Generic::new_with_default( "A", "integer", "0" ) );
         interface.add_generic( Generic::new_with_default( "B", "std_logic", "'0'" ) );
         interface.add_generic( Generic::new( "C", "boolean" ) );
@@ -130,7 +148,7 @@ mod tests {
 
     #[test]
     fn interface_from_json() -> Result< (), Box< dyn Error > > {
-        let interface = EntityInterface::from_file( Path::new( "tests/interface.json" ) )?;
+        let interface = EntityInterface::from_file_unnamed( Path::new( "tests/interface.json" ) )?;
         let mut source = String::new();
         for generic in interface.get_generics() {
             source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
@@ -147,7 +165,7 @@ mod tests {
      */
     #[test]
     fn invert_interface() {
-        let mut interface = EntityInterface::new( "test" );
+        let mut interface = EntityInterface::new_unnamed( "test" );
         interface.add_generic( Generic::new_with_default( "A", "integer", "0" ) );
         interface.add_generic( Generic::new_with_default( "B", "std_logic", "'0'" ) );
         interface.add_generic( Generic::new( "C", "boolean" ) );

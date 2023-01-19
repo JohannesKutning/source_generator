@@ -49,7 +49,11 @@
     "type" : "object",
     "properties" : {
         "name" : {
-            "description" : "Interface name",
+            "description" : "Interface name used as prefix",
+            "type"        : "string"
+        },
+        "class" : {
+            "description" : "Interface class identifier used as connection hint",
             "type"        : "string"
         },
         "generics" : {
@@ -67,6 +71,6 @@
             }
         }
     },
-	"required" : [ "name" ]
+	"required" : [ "class" ]
 }
 
