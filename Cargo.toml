@@ -18,6 +18,7 @@ serde_json = "1.0"
 serde-json-schema = "0.1.0"
 
 [[example]]
-name = "generate_vhdl_adder"
+name = "adder"
+path = "examples/vhdl/adder.rs"
 test = true
 
