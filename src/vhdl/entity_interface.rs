@@ -148,7 +148,8 @@ mod tests {
 
     #[test]
     fn interface_from_json() -> Result< (), Box< dyn Error > > {
-        let interface = EntityInterface::from_file_unnamed( Path::new( "tests/interface.json" ) )?;
+        let interface = EntityInterface::from_file_unnamed(
+                Path::new( "tests/vhdl/interface.json" ) )?;
         let mut source = String::new();
         for generic in interface.get_generics() {
             source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );

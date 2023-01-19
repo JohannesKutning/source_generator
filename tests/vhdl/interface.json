@@ -1,5 +1,5 @@
 {
-    "name" : "test",
+    "class" : "test",
     "generics" : [
         { "name" : "A", "data_type" : "integer", "default" : "0" },
         { "name" : "B", "data_type" : "std_logic", "default" : "'0'" },
