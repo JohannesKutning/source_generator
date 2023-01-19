@@ -13,6 +13,7 @@ use crate::vhdl::entity_interface::EntityInterface;
 
 pub struct Entity {
     name : String,
+    library : String,
     description : SingleLineComment,
     libraries : LibraryList,
     generics : GenericList,
@@ -22,9 +23,10 @@ pub struct Entity {
 
 impl Entity {
     pub fn new( name : & str ) -> Entity {
-        Entity { name : String::from( name ), description : SingleLineComment::new(),
-                libraries : LibraryList::new(), generics : GenericList::new(),
-                ports : PortList::new(), interfaces : Vec::new() }
+        Entity { name : String::from( name ), library : "work".to_string(),
+                description : SingleLineComment::new(), libraries : LibraryList::new(),
+                generics : GenericList::new(), ports : PortList::new(),
+                interfaces : Vec::new() }
     }
 
     pub fn with_interface( name : & str, interface : EntityInterface ) -> Entity {
@@ -70,6 +72,10 @@ impl Entity {
     pub fn get_name( & self ) -> & String {
         & self.name
     }
+
+    pub fn get_target_library( & self ) -> & String {
+        & self.library
+    }
 }
 
 impl Element for Entity {
@@ -84,7 +90,6 @@ impl Element for Entity {
         source.push_str( & format!( "{}{} {} {}\n", indent_str, ENTITY, self.name, IS ) );
         source.push_str( & self.generics.to_source_code( indent ) );
         source.push_str( & self.ports.to_source_code( indent ) );
-
         source.push_str( & format!( "{}{}\n", indent_str, BEGIN ) );
         source.push_str( & format!( "{}{} {} {};\n", indent_str, END, ENTITY, self.name ) );
 
@@ -186,11 +191,8 @@ mod tests {
         entity.add_port( Port::new( "b", Direction::OUT, "boolean" ) );
         entity.add_port( Port::new( "c", Direction::INOUT, "std_logic_vector( 31 downto 0 )" ) );
         entity.add_port( Port::new( "d", Direction::BUFFER, "std_logic_vector( 31 downto 0 )" ) );
-
-        assert_eq!(
-            entity.to_source_code( 0 ),
-            format!( "{}{}{}{}{}{}", DESCRIPTION, HEADER, GENERICS, PORTS, BEGIN, END )
-        );
+        assert_eq!( entity.to_source_code( 0 ),
+                format!( "{}{}{}{}{}{}", DESCRIPTION, HEADER, GENERICS, PORTS, BEGIN, END ) );
     }
 
     /**
