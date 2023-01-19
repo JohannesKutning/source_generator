@@ -11,19 +11,18 @@ design.
 
 ```rust
 fn main() -> Result< (), std::io::Error > {
-    let mut entity = Entity::new( "adder" );
-    entity.add_library_use( LibraryUse::new( "ieee", "numeric_std" ) );
-    entity.add_generic( Generic::new_with_default( "SIZE", "positive", "32" ) );
-    entity.add_port( Port::new( "a", Direction::IN, "unsigned( SIZE - 1 downto 0 )" ) );
-    entity.add_port( Port::new( "b", Direction::IN, "unsigned( SIZE - 1 downto 0 )" ) );
-    entity.add_port( Port::new( "c", Direction::OUT, "unsigned( SIZE - 1 downto 0 )" ) );
+    let mut adder = Entity::new( "adder" );
+    adder.add_library_use( LibraryUse::new( "ieee", "numeric_std" ) );
+    adder.add_generic( Generic::new_with_default( "SIZE", "positive", "32" ) );
+    adder.add_port( Port::new( "a", Direction::IN, "unsigned( SIZE - 1 downto 0 )" ) );
+    adder.add_port( Port::new( "b", Direction::IN, "unsigned( SIZE - 1 downto 0 )" ) );
+    adder.add_port( Port::new( "c", Direction::OUT, "unsigned( SIZE - 1 downto 0 )" ) );
 
-    let mut architecture = Architecture::new( "rtl", "adder" );
-    architecture.add_signal_assignment( SignalAssignment::new_with_label( "add", "c", "a + b" ));
+    let mut rtl = Architecture::new( "rtl", adder );
+    rtl.add_signal_assignment( SignalAssignment::new_with_label( "add", "c", "a + b" ));
 
-    let mut vhdl_file = VhdlFile::new( "examples/adder.vhd" );
-    vhdl_file.add_entity( entity );
-    vhdl_file.add_architecture( architecture );
+    let mut vhdl_file = VhdlFile::new( "examples/vhdl/adder.vhd" );
+    vhdl_file.add_architecture( rtl );
 
     vhdl_file.write()?;
 }

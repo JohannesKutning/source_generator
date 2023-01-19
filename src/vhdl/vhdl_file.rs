@@ -49,6 +49,10 @@ impl Element for VhdlFile {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const ENTITY : &'static str = "entity test is\nbegin\nend entity test;\n\n";
+    const ARCHITECTURE : &'static str = "architecture arch of test is\nbegin\nend architecture arch;\n\n";
+
     #[test]
     fn new() {
         let file = VhdlFile::new( "test" );
@@ -59,15 +63,14 @@ mod tests {
     fn add_entity() {
         let mut file = VhdlFile::new( "test" );
         file.add_entity( Entity::new( "test" ) );
-        let expected = "entity test is\nbegin\nend entity test;\n\n";
-        assert_eq!( expected, file.to_source_code( 0 ) );
+        assert_eq!( ENTITY, file.to_source_code( 0 ) );
     }
 
     #[test]
     fn add_architecture() {
         let mut file = VhdlFile::new( "test" );
-        file.add_architecture( Architecture::new( "arch", "test" ) );
-        let expected = "architecture arch of test is\nbegin\nend architecture arch;\n\n";
+        file.add_architecture( Architecture::new( "arch", Entity::new( "test" ) ) );
+        let expected = format!( "{}{}", ENTITY, ARCHITECTURE );
         assert_eq!( expected, file.to_source_code( 0 ) );
     }
 }

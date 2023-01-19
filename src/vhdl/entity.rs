@@ -66,6 +66,10 @@ impl Entity {
         }
         self.interfaces.push( interface );
     }
+
+    pub fn get_name( & self ) -> & String {
+        & self.name
+    }
 }
 
 impl Element for Entity {

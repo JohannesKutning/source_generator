@@ -1,6 +1,7 @@
 use crate::element::Element;
 use crate::vhdl::keywords::*;
 use crate::vhdl::design_unit::DesignUnit;
+use crate::vhdl::entity::Entity;
 use crate::vhdl::block_declarative_item::BlockDeclarativeItem;
 use crate::vhdl::constant_declaration::ConstantDeclaration;
 use crate::vhdl::signal_declaration::SignalDeclaraion;
@@ -10,15 +11,15 @@ use crate::vhdl::process::Process;
 
 pub struct Architecture {
     name : String,
-    entity : String,
+    entity : Entity,
     declarations : Vec< Box< dyn BlockDeclarativeItem > >,
     statements : Vec< Box< dyn ConcurrentStatement > >
 }
 
 impl Architecture {
-    pub fn new( name : & str, entity : & str ) -> Architecture {
-        Architecture { name : name.to_string(), entity : entity.to_string(),
-                declarations : Vec::new(), statements : Vec::new() }
+    pub fn new( name : & str, entity : Entity ) -> Architecture {
+        Architecture { name : name.to_string(), entity : entity, declarations : Vec::new(),
+            statements : Vec::new() }
     }
 
     pub fn add_constant_declaration( & mut self, constant_declaration : ConstantDeclaration ) {
@@ -40,11 +41,12 @@ impl Architecture {
 
 impl Element for Architecture {
     fn to_source_code( & self, indent : usize ) -> String {
-        let mut source = String::new();
+        let mut source = self.entity.to_source_code( indent );
+        source.push_str( "\n" );
         let indent_str = crate::util::indent( indent );
 
         source.push_str( & format!( "{}{} {} {} {} {}\n", indent_str, ARCHITECTURE, self.name, OF,
-                self.entity, IS ) );
+                self.entity.get_name(), IS ) );
         for declaration in & self.declarations {
             source.push_str( & declaration.to_source_code( indent + 1 ) );
         }
@@ -67,6 +69,7 @@ mod tests {
     use super::*;
     const NAME : &'static str = "rtl";
     const ENTITY : &'static str = "test";
+    const ENTITY_TEST : &'static str = "entity test is\nbegin\nend entity test;\n\n";
     const HEADER : &'static str = "architecture rtl of test is\n";
     const BEGIN : &'static str = "begin\n";
     const END : &'static str = "end architecture rtl;\n";
@@ -79,12 +82,9 @@ mod tests {
      */
     #[test]
     fn architecture_frame() {
-        let architecture = Architecture::new( NAME, ENTITY );
-
-        assert_eq!(
-            architecture.to_source_code( 0 ),
-            format!( "{}{}{}", HEADER, BEGIN, END )
-        );
+        let architecture = Architecture::new( NAME, Entity::new( ENTITY ) );
+        assert_eq!( architecture.to_source_code( 0 ),
+            format!( "{}{}{}{}", ENTITY_TEST, HEADER, BEGIN, END ) );
     }
 
     /**
@@ -92,13 +92,10 @@ mod tests {
      */
     #[test]
     fn architecture_with_signal_declaration() {
-        let mut architecture = Architecture::new( NAME, ENTITY );
+        let mut architecture = Architecture::new( NAME, Entity::new( ENTITY ) );
         architecture.add_signal_declaration( SignalDeclaraion::new( "signal_1", "boolean" ) );
-
-        assert_eq!(
-            architecture.to_source_code( 0 ),
-            format!( "{}{}{}{}", HEADER, SIGNAL_DECLARATION, BEGIN, END )
-        );
+        assert_eq!( architecture.to_source_code( 0 ),
+            format!( "{}{}{}{}{}", ENTITY_TEST, HEADER, SIGNAL_DECLARATION, BEGIN, END ) );
     }
 
     /**
@@ -106,13 +103,12 @@ mod tests {
      */
     #[test]
     fn architecture_with_signal_declaration_and_assignment() {
-        let mut architecture = Architecture::new( NAME, ENTITY );
+        let mut architecture = Architecture::new( NAME, Entity::new( ENTITY ) );
         architecture.add_signal_declaration( SignalDeclaraion::new( "signal_1", "boolean" ) );
         architecture.add_signal_assignment( SignalAssignment::new_with_label( "s1", "signal_1", "true" ) );
 
-        assert_eq!(
-            architecture.to_source_code( 0 ),
-            format!( "{}{}{}{}{}", HEADER, SIGNAL_DECLARATION, BEGIN, SIGNAL_ASSIGNMENT, END )
+        assert_eq!( architecture.to_source_code( 0 ),
+            format!( "{}{}{}{}{}{}", ENTITY_TEST, HEADER, SIGNAL_DECLARATION, BEGIN, SIGNAL_ASSIGNMENT, END )
         );
     }
 
@@ -121,13 +117,11 @@ mod tests {
      */
     #[test]
     fn architecture_with_constant_declaration_and_assignment() {
-        let mut architecture = Architecture::new( NAME, ENTITY );
+        let mut architecture = Architecture::new( NAME, Entity::new( ENTITY ) );
         architecture.add_constant_declaration( ConstantDeclaration::new( "const_1", "integer", "12" ) );
 
-        assert_eq!(
-            architecture.to_source_code( 0 ),
-            format!( "{}{}{}{}", HEADER, CONSTANT_DECLARATION, BEGIN, END )
-        );
+        assert_eq!( architecture.to_source_code( 0 ),
+            format!( "{}{}{}{}{}", ENTITY_TEST, HEADER, CONSTANT_DECLARATION, BEGIN, END ) );
     }
 }
 
