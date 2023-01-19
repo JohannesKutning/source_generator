@@ -6,7 +6,7 @@ need of source code generation.
 
 The VHDL source code generation is oriented on the reverse BNF of VHDL 2008
 with some simplifications.
-The example **generate_vhdl_adder.rs** shows the creation of a simple VHDL adder
+The example **vhdl/adder.rs** shows the creation of a simple VHDL adder
 design.
 
 ```rust
