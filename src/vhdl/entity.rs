@@ -27,6 +27,12 @@ impl Entity {
                 ports : PortList::new(), interfaces : Vec::new() }
     }
 
+    pub fn with_interface( name : & str, interface : EntityInterface ) -> Entity {
+        let mut entity = Entity::new( name );
+        entity.add_interface( interface );
+        return entity;
+    }
+
     pub fn add_description( & mut self, text : & str ) {
         self.description = SingleLineComment::new_with_text( text );
     }
@@ -188,7 +194,7 @@ mod tests {
      */
     #[test]
     fn entity_with_interface() -> Result< (), Box< dyn Error > > {
-        let interface = EntityInterface::from_file( Path::new( "tests/interface.json" ) )?;
+        let interface = EntityInterface::from_file_unnamed( Path::new( "tests/interface.json" ) )?;
         let mut entity = Entity::new( NAME );
         entity.add_interface( interface );
         assert_eq!( entity.to_source_code( 0 ),
