@@ -6,7 +6,7 @@ use serde_json_schema::Schema;
 use crate::vhdl::generic::Generic;
 use crate::vhdl::port::Port;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct EntityInterface {
     #[serde(default)]
     name : String,
