@@ -1,9 +1,10 @@
 use crate::element::Element;
+use crate::element::to_source_code_list;
 use crate::vhdl::port::Port;
 use crate::vhdl::keywords::PORT;
 
 pub struct PortList {
-    ports : Vec< Port >
+    ports : Vec< Box< dyn Element > >
 }
 
 impl PortList {
@@ -12,30 +13,22 @@ impl PortList {
     }
 
     pub fn add_port( & mut self, port : Port ) {
-        self.ports.push( port );
+        self.ports.push( Box::new( port ) );
     }
 }
 
 impl Element for PortList {
     fn to_source_code( & self, indent : usize ) -> String {
         let mut source = String::new();
-
         if self.ports.is_empty() {
             return source;
         }
 
         let indent_str = crate::util::indent( indent + 1 );
-        source.push_str( & format!( "{}{} (\n", indent_str, PORT ) );
-
-        for ( pos, port ) in self.ports.iter().enumerate() {
-            source.push_str( & port.to_source_code( indent + 2 ) );
-            if pos < self.ports.len() - 1 {
-                source.push_str( ";" );
-            }
-            source.push_str( "\n" );
-        }
-        source.push_str( & format!( "{});\n", indent_str ) );
-
+        let list_indent_str = crate::util::indent( indent + 2 );
+        let list = to_source_code_list( & self.ports, & format!( ";\n{}", list_indent_str ) );
+        source.push_str( & format!( "{}{} (\n{}{}\n{});\n", indent_str, PORT, list_indent_str,
+                list, indent_str ) );
         return source;
     }
 }
