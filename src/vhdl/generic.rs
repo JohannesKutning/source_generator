@@ -31,6 +31,10 @@ impl Generic {
     pub fn set_name( & mut self, name : & str ) {
         self.name = name.to_string();
     }
+
+    pub fn get_data_type( & self ) -> & String {
+        & self.data_type
+    }
 }
 
 impl Element for Generic {
