@@ -1,0 +1,7 @@
+{
+    "class" : "clk_rst",
+    "ports" : [
+        { "name" : "clk", "direction" : "in", "data_type" : "std_logic" },
+        { "name" : "rst", "direction" : "in", "data_type" : "std_logic" }
+    ]
+}
