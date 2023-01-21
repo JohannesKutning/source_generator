@@ -34,6 +34,14 @@ impl Port {
         & self.name
     }
 
+    pub fn get_direction( & self ) -> Direction {
+        self.direction
+    }
+
+    pub fn get_data_type( & self ) -> & String {
+        & self.data_type
+    }
+
     pub fn set_name( & mut self, name : & str ) {
         self.name = name.to_string();
     }
