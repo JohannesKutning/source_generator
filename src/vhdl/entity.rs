@@ -1,13 +1,12 @@
 use crate::element::Element;
+use crate::element::to_source_code_list;
 use crate::vhdl::design_unit::DesignUnit;
 use crate::vhdl::keywords::*;
 use crate::vhdl::single_line_comment::SingleLineComment;
 use crate::vhdl::library_list::LibraryList;
 use crate::vhdl::library::Library;
 use crate::vhdl::library_use::LibraryUse;
-use crate::vhdl::generic_list::GenericList;
 use crate::vhdl::generic::Generic;
-use crate::vhdl::port_list::PortList;
 use crate::vhdl::port::Port;
 use crate::vhdl::entity_interface::EntityInterface;
 
@@ -16,17 +15,16 @@ pub struct Entity {
     library : String,
     description : SingleLineComment,
     libraries : LibraryList,
-    generics : GenericList,
-    ports : PortList,
     interfaces : Vec< EntityInterface >,
 }
 
 impl Entity {
     pub fn new( name : & str ) -> Entity {
-        Entity { name : String::from( name ), library : "work".to_string(),
+        let mut entity = Entity { name : String::from( name ), library : "work".to_string(),
                 description : SingleLineComment::new(), libraries : LibraryList::new(),
-                generics : GenericList::new(), ports : PortList::new(),
-                interfaces : Vec::new() }
+                interfaces : Vec::new() };
+        entity.add_interface( & EntityInterface::new( "", "__default__" ) );
+        return entity;
     }
 
     pub fn with_interface( name : & str, interface : & EntityInterface ) -> Entity {
@@ -52,20 +50,14 @@ impl Entity {
     }
 
     pub fn add_generic( & mut self, generic : Generic ) {
-        self.generics.add_generic( generic );
+        self.interfaces[ 0 ].add_generic( generic );
     }
 
     pub fn add_port( & mut self, port : Port ) {
-        self.ports.add_port( port );
+        self.interfaces[ 0 ].add_port( port );
     }
 
     pub fn add_interface( & mut self, interface : & EntityInterface ) {
-        for generic in interface.get_generics() {
-            self.add_generic( generic.clone() );
-        }
-        for port in interface.get_ports() {
-            self.add_port( port.clone() );
-        }
         self.interfaces.push( interface.clone() );
     }
 
@@ -80,6 +72,54 @@ impl Entity {
     pub fn get_interfaces( & self ) -> & Vec< EntityInterface > {
         & self.interfaces
     }
+
+    fn generics_to_source_code( & self, indent : usize ) -> String {
+        let mut source = String::new();
+        let indent_str = crate::util::indent( indent );
+        let list_indent_str = crate::util::indent( indent + 1 );
+        let generic_list = self.get_generics();
+        if ! generic_list.is_empty() {
+            let list = to_source_code_list( & generic_list,
+                    & format!( ";\n{}", list_indent_str ) );
+            source.push_str( & format!( "{}{} (\n{}{}\n{});\n",
+                    indent_str, GENERIC, list_indent_str, list, indent_str ) );
+        }
+        return source;
+    }
+
+    fn get_generics( & self ) -> Vec< Box< dyn Element > > {
+        let mut generic_list : Vec< Box< dyn Element > > = Vec::new();
+        for interface in & self.interfaces {
+            for generic in interface.get_generics() {
+                generic_list.push( Box::new( generic.clone() ) );
+            }
+        }
+        return generic_list;
+    }
+
+    fn ports_to_source_code( & self, indent : usize ) -> String {
+        let mut source = String::new();
+        let indent_str = crate::util::indent( indent );
+        let list_indent_str = crate::util::indent( indent + 1 );
+        let port_list = self.get_ports();
+        if ! port_list.is_empty() {
+            let list = to_source_code_list( & port_list,
+                    & format!( ";\n{}", list_indent_str ) );
+            source.push_str( & format!( "{}{} (\n{}{}\n{});\n",
+                    indent_str, PORT, list_indent_str, list, indent_str ) );
+        }
+        return source;
+    }
+
+    fn get_ports( & self ) -> Vec< Box< dyn Element > > {
+        let mut port_list : Vec< Box< dyn Element > > = Vec::new();
+        for interface in & self.interfaces {
+            for port in interface.get_ports() {
+                port_list.push( Box::new( port.clone() ) );
+            }
+        }
+        return port_list;
+    }
 }
 
 impl Element for Entity {
@@ -92,8 +132,8 @@ impl Element for Entity {
             source.push_str( & self.description.to_source_code( indent ) );
         }
         source.push_str( & format!( "{}{} {} {}\n", indent_str, ENTITY, self.name, IS ) );
-        source.push_str( & self.generics.to_source_code( indent ) );
-        source.push_str( & self.ports.to_source_code( indent ) );
+        source.push_str( & self.generics_to_source_code( indent + 1 ) );
+        source.push_str( & self.ports_to_source_code( indent + 1 ) );
         source.push_str( & format!( "{}{}\n", indent_str, BEGIN ) );
         source.push_str( & format!( "{}{} {} {};\n", indent_str, END, ENTITY, self.name ) );
 
