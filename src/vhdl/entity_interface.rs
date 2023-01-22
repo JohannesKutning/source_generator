@@ -50,12 +50,12 @@ impl EntityInterface {
         return inverted;
     }
 
-    pub fn add_generic( & mut self, generic : Generic ) {
-        self.generics.push( generic );
+    pub fn get_name( & self ) -> & String {
+        & self.name
     }
 
-    pub fn add_port( & mut self, port : Port ) {
-        self.ports.push( port );
+    pub fn get_class( & self ) -> & String {
+        & self.class
     }
 
     pub fn get_generics( & self ) -> & Vec< Generic > {
@@ -68,6 +68,14 @@ impl EntityInterface {
 
     pub fn rename( & mut self, name : & str ) {
         self.name = name.to_string();
+    }
+
+    pub fn add_generic( & mut self, generic : Generic ) {
+        self.generics.push( generic );
+    }
+
+    pub fn add_port( & mut self, port : Port ) {
+        self.ports.push( port );
     }
 
     fn read_schema() -> Result< Schema, Box< dyn Error > > {

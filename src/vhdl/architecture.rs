@@ -1,3 +1,4 @@
+use linked_hash_map::LinkedHashMap;
 use crate::element::Element;
 use crate::vhdl::keywords::*;
 use crate::vhdl::design_unit::DesignUnit;
@@ -14,13 +15,14 @@ pub struct Architecture {
     name : String,
     entity : Entity,
     declarations : Vec< Box< dyn BlockDeclarativeItem > >,
+    instances : LinkedHashMap< String, Instance >,
     statements : Vec< Box< dyn ConcurrentStatement > >
 }
 
 impl Architecture {
     pub fn new( name : & str, entity : Entity ) -> Architecture {
         Architecture { name : name.to_string(), entity : entity, declarations : Vec::new(),
-            statements : Vec::new() }
+                instances : LinkedHashMap::new(), statements : Vec::new() }
     }
 
     pub fn add_constant_declaration( & mut self, constant_declaration : ConstantDeclaration ) {
@@ -36,7 +38,14 @@ impl Architecture {
     }
 
     pub fn add_instance( & mut self, instance : Instance ) {
-        self.statements.push( Box::< Instance >::new( instance ) );
+        self.instances.insert( instance.get_name().to_string(), instance );
+    }
+
+    pub fn connect_instance_to_entity( & mut self, name : & str ) {
+        if ! self.instances.contains_key( name ) {
+            eprintln!( "ERROR: instance {:?} not found in architecture {:?}\n    TODO implement error!", name, self.name );
+        }
+        self.instances.get_mut( name ).unwrap().connect_to_entity( & self.entity );
     }
 
     pub fn add_process( & mut self, process : Process ) {
@@ -56,6 +65,9 @@ impl Element for Architecture {
             source.push_str( & declaration.to_source_code( indent + 1 ) );
         }
         source.push_str( & format!( "{}{}\n", indent_str, BEGIN ) );
+        for ( _name, instance ) in & self.instances {
+            source.push_str( & instance.to_source_code( indent + 1 ) );
+        }
         for statement in & self.statements {
             source.push_str( & statement.to_source_code( indent + 1 ) );
         }

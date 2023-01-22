@@ -76,6 +76,10 @@ impl Entity {
     pub fn get_target_library( & self ) -> & String {
         & self.library
     }
+
+    pub fn get_interfaces( & self ) -> & Vec< EntityInterface > {
+        & self.interfaces
+    }
 }
 
 impl Element for Entity {

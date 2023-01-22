@@ -16,6 +16,9 @@ pub mod generic;
 pub mod port_list;
 pub mod port;
 pub mod entity_interface;
+pub mod entity_interface_binding_list;
+pub mod entity_interface_binding;
+pub mod binding;
 
 pub mod architecture;
 pub mod block_declarative_item;
@@ -23,6 +26,7 @@ pub mod constant_declaration;
 pub mod signal_declaration;
 pub mod concurrent_statement;
 pub mod signal_assignment;
+pub mod instance;
 pub mod process;
 pub mod sensitivity_list;
 pub mod process_declarative_item;

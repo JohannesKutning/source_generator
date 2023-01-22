@@ -6,27 +6,27 @@ use crate::vhdl::port::Port;
 #[derive(Clone)]
 pub struct Binding {
     generic : bool,
-    inner_name : String,
+    inner : String,
     direction : Direction,
     data_type : String,
-    outer_name : String,
+    outer : String,
 }
 
 impl Binding {
     pub fn from_generic( generic : & Generic ) -> Binding{
-        Binding { generic : true, inner_name : generic.get_name().to_string(),
+        Binding { generic : true, inner : generic.get_name().to_string(),
                 direction : Direction::IN, data_type : generic.get_data_type().to_string(),
-                outer_name : String::new() }
+                outer : String::new() }
     }
 
     pub fn from_port( port : & Port ) -> Binding {
-        Binding { generic : false, inner_name : port.get_name().to_string(),
+        Binding { generic : false, inner : port.get_name().to_string(),
                 direction : port.get_direction(), data_type : port.get_data_type().to_string(),
-                outer_name : String::new() }
+                outer : String::new() }
     }
 
     pub fn connect_to_generic( & mut self, generic : & Generic ) {
-        self.outer_name = generic.get_name().to_string();
+        self.outer = generic.get_name().to_string();
     }
 
     pub fn connect_to_port( & mut self, port : & Port ) {
@@ -37,18 +37,34 @@ impl Binding {
         if & self.data_type != port.get_data_type() {
             panic!( "error: port data type mismatch!" );
         }
-        self.outer_name = port.get_name().to_string();
+        self.outer = port.get_name().to_string();
+    }
+
+    pub fn get_inner( & self ) -> & String {
+        & self.inner
+    }
+
+    pub fn get_direction( & self ) -> & Direction {
+        & self.direction
+    }
+
+    pub fn get_data_type( & self ) -> & String {
+        & self.data_type
+    }
+
+    pub fn get_outer( & self ) -> & String {
+        & self.outer
     }
 }
 
 impl Element for Binding {
     fn to_source_code( & self, indent : usize ) -> String {
         let mut source = String::new();
-        if self.generic && self.outer_name.is_empty() {
+        if self.generic && self.outer.is_empty() {
             return source;
         }
         let indent_str = crate::util::indent( indent );
-        source.push_str( & format!( "{}{} => {}", indent_str, self.inner_name, self.outer_name ) );
+        source.push_str( & format!( "{}{} => {}", indent_str, self.inner, self.outer ) );
         return source;
     }
 }
