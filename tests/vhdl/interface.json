@@ -1,4 +1,5 @@
 {
+    "name" : "interface",
     "class" : "test",
     "generics" : [
         { "name" : "A", "data_type" : "integer", "default" : "0" },
