@@ -106,7 +106,7 @@ mod tests {
         let interface = EntityInterface::from_file_unnamed(
                 Path::new( "tests/vhdl/interface.json" ) )?;
         let mut binding = EntityInterfaceBinding::from_entity_interface( & interface );
-        let entity = Entity::with_interface( "test", interface );
+        let entity = Entity::with_interface( "test", & interface );
         binding.connect_to_entity_interface( & entity.get_interfaces()[ 0 ] );
         assert_eq!( BOUND, to_string( & binding ) );
         Ok(())

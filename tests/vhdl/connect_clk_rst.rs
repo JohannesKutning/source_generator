@@ -34,9 +34,9 @@ use source_generator::vhdl::instance::Instance;
 fn main() -> Result< (), Box< dyn Error > > {
     let interface = EntityInterface::from_file_unnamed(
         Path::new( "tests/vhdl/clk_rst.json" ) )?;
-    let mut main = Entity::with_interface( "main", interface.clone() );
+    let mut main = Entity::with_interface( "main", & interface.clone() );
     main.add_library_use( LibraryUse::new( "ieee", "std_logic_1164" ) );
-    let mut sub = Entity::with_interface( "sub", interface );
+    let mut sub = Entity::with_interface( "sub", & interface );
     sub.add_library_use( LibraryUse::new( "ieee", "std_logic_1164" ) );
     let mut arch = Architecture::new( "struct", main );
     arch.add_instance( Instance::from_entity( "sub_a", & sub ) );

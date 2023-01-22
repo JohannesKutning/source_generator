@@ -29,7 +29,7 @@ impl Entity {
                 interfaces : Vec::new() }
     }
 
-    pub fn with_interface( name : & str, interface : EntityInterface ) -> Entity {
+    pub fn with_interface( name : & str, interface : & EntityInterface ) -> Entity {
         let mut entity = Entity::new( name );
         entity.add_interface( interface );
         return entity;
@@ -59,14 +59,14 @@ impl Entity {
         self.ports.add_port( port );
     }
 
-    pub fn add_interface( & mut self, interface : EntityInterface ) {
+    pub fn add_interface( & mut self, interface : & EntityInterface ) {
         for generic in interface.get_generics() {
             self.add_generic( generic.clone() );
         }
         for port in interface.get_ports() {
             self.add_port( port.clone() );
         }
-        self.interfaces.push( interface );
+        self.interfaces.push( interface.clone() );
     }
 
     pub fn get_name( & self ) -> & String {
@@ -208,7 +208,7 @@ mod tests {
                 Path::new( "tests/vhdl/interface.json" ) )?;
 
         let mut entity = Entity::new( NAME );
-        entity.add_interface( interface );
+        entity.add_interface( & interface );
         assert_eq!( entity.to_source_code( 0 ),
             format!( "{}{}{}{}", HEADER, INTERFACE, BEGIN, END ) );
         Ok(())
