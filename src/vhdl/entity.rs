@@ -6,10 +6,12 @@ use crate::vhdl::single_line_comment::SingleLineComment;
 use crate::vhdl::library_list::LibraryList;
 use crate::vhdl::library::Library;
 use crate::vhdl::library_use::LibraryUse;
+use crate::vhdl::known_libraries::get_known_library_use;
 use crate::vhdl::generic::Generic;
 use crate::vhdl::port::Port;
 use crate::vhdl::entity_interface::EntityInterface;
 
+#[derive(Clone)]
 pub struct Entity {
     name : String,
     library : String,
@@ -45,19 +47,31 @@ impl Entity {
         self.libraries.add_library( library );
     }
 
-    pub fn add_library_use( & mut self, library_use : LibraryUse ) {
-        self.libraries.add_library_use( library_use );
+    pub fn add_library_use( & mut self, library_use : & LibraryUse ) {
+        self.libraries.add_library_use( library_use.clone() );
+    }
+
+    pub fn add_missing_library_use( & mut self, data_type : & str ) {
+        match get_known_library_use( data_type ) {
+            Some( l ) => self.add_library_use( & l ),
+            None => {},
+        };
     }
 
     pub fn add_generic( & mut self, generic : Generic ) {
+        self.add_missing_library_use( generic.get_data_type() );
         self.interfaces[ 0 ].add_generic( generic );
     }
 
     pub fn add_port( & mut self, port : Port ) {
+        self.add_missing_library_use( port.get_data_type() );
         self.interfaces[ 0 ].add_port( port );
     }
 
     pub fn add_interface( & mut self, interface : & EntityInterface ) {
+        for data_type in interface.get_data_types() {
+            self.add_missing_library_use( & data_type );
+        }
         self.interfaces.push( interface.clone() );
     }
 
@@ -167,6 +181,8 @@ mod tests {
         "    );\n" );
     const BEGIN : &'static str = "begin\n";
     const END : &'static str = "end entity test;\n";
+    const USE_STD_LOGIC_1164 : &'static str = concat!( "library ieee;\n",
+        "    use ieee.std_logic_1164.all;\n\n" );
     const LIBRARIES : &'static str = concat!( "library ieee;\n",
         "    use ieee.std_logic_1164.all;\n",
         "    use ieee.numeric_std.all;\n",
@@ -218,7 +234,7 @@ mod tests {
 
         assert_eq!(
             entity.to_source_code( 0 ),
-            format!( "{}{}{}{}{}", DESCRIPTION, HEADER, PORTS, BEGIN, END )
+            format!( "{}{}{}{}{}{}", USE_STD_LOGIC_1164, DESCRIPTION, HEADER, PORTS, BEGIN, END )
         );
     }
 
@@ -236,7 +252,7 @@ mod tests {
         entity.add_port( Port::new( "c", Direction::INOUT, "std_logic_vector( 31 downto 0 )" ) );
         entity.add_port( Port::new( "d", Direction::BUFFER, "std_logic_vector( 31 downto 0 )" ) );
         assert_eq!( entity.to_source_code( 0 ),
-                format!( "{}{}{}{}{}{}", DESCRIPTION, HEADER, GENERICS, PORTS, BEGIN, END ) );
+                format!( "{}{}{}{}{}{}{}", USE_STD_LOGIC_1164, DESCRIPTION, HEADER, GENERICS, PORTS, BEGIN, END ) );
     }
 
     /**
@@ -250,7 +266,7 @@ mod tests {
         let mut entity = Entity::new( NAME );
         entity.add_interface( & interface );
         assert_eq!( entity.to_source_code( 0 ),
-            format!( "{}{}{}{}", HEADER, INTERFACE, BEGIN, END ) );
+            format!( "{}{}{}{}{}", USE_STD_LOGIC_1164, HEADER, INTERFACE, BEGIN, END ) );
         Ok(())
     }
 
@@ -261,9 +277,9 @@ mod tests {
     fn entity_with_library() {
         let mut entity = Entity::new( NAME );
         entity.add_library( Library::new( "ieee" ) );
-        entity.add_library_use( LibraryUse::new( "ieee", "std_logic_1164" ) );
-        entity.add_library_use( LibraryUse::new( "ieee", "numeric_std" ) );
-        entity.add_library_use( LibraryUse::new( "test", "utility" ) );
+        entity.add_library_use( & LibraryUse::new( "ieee", "std_logic_1164" ) );
+        entity.add_library_use( & LibraryUse::new( "ieee", "numeric_std" ) );
+        entity.add_library_use( & LibraryUse::new( "test", "utility" ) );
 
         assert_eq!(
             entity.to_source_code( 0 ),

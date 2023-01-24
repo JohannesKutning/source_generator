@@ -40,6 +40,10 @@ impl Binding {
         self.outer = port.get_name().to_string();
     }
 
+    pub fn connect_by_name( & mut self, outer : & str ) {
+        self.outer = outer.to_string();
+    }
+
     pub fn get_inner( & self ) -> & String {
         & self.inner
     }

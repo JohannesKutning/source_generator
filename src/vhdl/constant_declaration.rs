@@ -3,6 +3,7 @@ use crate::vhdl::keywords::*;
 use crate::vhdl::block_declarative_item::BlockDeclarativeItem;
 use crate::vhdl::process_declarative_item::ProcessDeclarativeItem;
 
+#[derive(Clone)]
 pub struct ConstantDeclaration {
     name : String,
     data_type : String,
@@ -14,6 +15,14 @@ impl ConstantDeclaration {
             -> ConstantDeclaration {
         ConstantDeclaration { name : name.to_string(), data_type : data_type.to_string(),
                 default : default.to_string() }
+    }
+
+    pub fn get_name( & self ) -> & String {
+        & self.name
+    }
+
+    pub fn get_data_type( & self ) -> & String {
+        & self.data_type
     }
 }
 

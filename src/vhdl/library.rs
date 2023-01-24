@@ -4,6 +4,7 @@ use crate::element::Element;
 use crate::vhdl::library_use::LibraryUse;
 use crate::vhdl::keywords::*;
 
+#[derive(Clone)]
 pub struct Library {
     name : String,
     uses : LinkedHashSet< LibraryUse >

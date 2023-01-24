@@ -4,6 +4,7 @@ use crate::element::Element;
 use crate::vhdl::library::Library;
 use crate::vhdl::library_use::LibraryUse;
 
+#[derive(Clone)]
 pub struct LibraryList {
     libraries : HashMap< String, Library >
 }

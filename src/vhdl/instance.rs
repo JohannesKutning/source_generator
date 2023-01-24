@@ -1,4 +1,5 @@
 use crate::element::Element;
+use crate::vhdl::vhdl_error::VhdlError;
 use crate::element::to_source_code_list;
 use crate::vhdl::concurrent_statement::ConcurrentStatement;
 use crate::vhdl::entity::Entity;
@@ -43,7 +44,7 @@ impl Instance {
     pub fn connect_to_entity( & mut self, entity : & Entity ) {
         let entity_interfaces = entity.get_interfaces();
         let mut unbound_entity_interfaces = vec![ true; entity_interfaces.len() ];
-        for instance_interface in self.bindings.get_mut_interfaces() {
+        for instance_interface in self.bindings.get_interfaces_mut() {
             let mut m = Match::new();
             for ( entity_idx, entity_interface ) in entity_interfaces.iter().enumerate() {
                 if ! unbound_entity_interfaces[ entity_idx ] {
@@ -59,8 +60,25 @@ impl Instance {
         }
     }
 
+    pub fn connect_to_port( & mut self, inner : & str, outer : & str ) -> Result< (), VhdlError > {
+        let binding = self.bindings.get_port_mut( inner )?;
+        binding.connect_by_name( outer );
+        Ok(())
+    }
+
     pub fn get_name( & self ) -> & String {
         & self.name
+    }
+
+    pub fn get_port_data_type_by_name( & self, name : & str ) -> Option< & String > {
+        for interface in self.bindings.get_interfaces() {
+            for port in interface.get_ports() {
+                if port.get_inner() == name {
+                    return Some( port.get_data_type() )
+                }
+            }
+        }
+        None
     }
 
     fn get_generic_bindings( & self ) -> Vec< Box::< dyn Element > > {

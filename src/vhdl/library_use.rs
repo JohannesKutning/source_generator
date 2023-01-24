@@ -1,11 +1,11 @@
 use crate::element::Element;
 use crate::vhdl::keywords::*;
 
-#[derive(Eq, Hash, PartialEq)]
+#[derive(Eq, Hash, PartialEq, Clone)]
 pub struct LibraryUse {
     library : String,
     package : String,
-    element : String
+    element : String,
 }
 
 impl LibraryUse {

@@ -2,6 +2,7 @@ use crate::element::Element;
 use crate::vhdl::keywords::*;
 use crate::vhdl::block_declarative_item::BlockDeclarativeItem;
 
+#[derive(PartialEq, Clone)]
 pub struct SignalDeclaraion {
     name : String,
     data_type : String,
@@ -18,6 +19,14 @@ impl SignalDeclaraion {
             -> SignalDeclaraion {
         SignalDeclaraion { name : name.to_string(), data_type : data_type.to_string(),
                 default : default.to_string() }
+    }
+
+    pub fn get_name( & self ) -> & String {
+        & self.name
+    }
+
+    pub fn get_data_type( & self ) -> & String {
+        & self.data_type
     }
 }
 

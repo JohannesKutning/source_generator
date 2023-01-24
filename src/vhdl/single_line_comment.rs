@@ -2,6 +2,7 @@ use crate::element::Element;
 
 const START : &'static str = "--";
 
+#[derive(Clone)]
 pub struct SingleLineComment {
     comment : crate::comment::single_line_comment::SingleLineComment
 }

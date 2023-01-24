@@ -2,12 +2,14 @@ pub mod keywords;
 pub mod operators;
 pub mod single_line_comment;
 
+pub mod vhdl_error;
 pub mod vhdl_file;
 
 pub mod design_unit;
 pub mod library;
 pub mod library_list;
 pub mod library_use;
+pub mod known_libraries;
 
 pub mod entity;
 pub mod direction;
@@ -22,6 +24,7 @@ pub mod binding;
 
 pub mod architecture;
 pub mod block_declarative_item;
+pub mod block_declarative_list;
 pub mod constant_declaration;
 pub mod signal_declaration;
 pub mod concurrent_statement;

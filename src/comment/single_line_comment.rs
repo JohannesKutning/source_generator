@@ -1,6 +1,6 @@
 use crate::element::Element;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SingleLineComment {
     start : String,
     text : String

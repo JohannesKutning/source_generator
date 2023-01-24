@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn add_architecture() {
         let mut file = VhdlFile::new( "test" );
-        file.add_architecture( Architecture::new( "arch", Entity::new( "test" ) ) );
+        file.add_architecture( Architecture::new( "arch", & Entity::new( "test" ) ) );
         let expected = format!( "{}{}", ENTITY, ARCHITECTURE );
         assert_eq!( expected, file.to_source_code( 0 ) );
     }

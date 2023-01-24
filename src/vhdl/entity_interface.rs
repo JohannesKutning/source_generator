@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fs;
 use std::path::Path;
+use std::collections::HashSet;
 use serde_derive::Deserialize;
 use serde_json_schema::Schema;
 use crate::vhdl::generic::Generic;
@@ -64,6 +65,17 @@ impl EntityInterface {
 
     pub fn get_ports( & self ) -> & Vec< Port > {
         & self.ports
+    }
+
+    pub fn get_data_types( & self ) -> HashSet< String > {
+        let mut data_types = HashSet::new();
+        for generic in & self.generics {
+            data_types.insert( generic.get_data_type().clone() );
+        }
+        for port in & self.ports {
+            data_types.insert( port.get_data_type().clone() );
+        }
+        return data_types;
     }
 
     pub fn rename( & mut self, name : & str ) {

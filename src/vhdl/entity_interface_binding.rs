@@ -46,6 +46,19 @@ impl EntityInterfaceBinding {
         }
     }
 
+    pub fn contains_port( & self, name : & str ) -> bool {
+        self.ports.iter().any( |p| p.get_inner() == name )
+    }
+
+    pub fn get_port_mut( & mut self, name : & str ) -> Option< & mut Binding > {
+        for port in & mut self.ports {
+            if port.get_inner() == name {
+                return Some( port );
+            }
+        }
+        None
+    }
+
     fn generic_bindings_from_interface( interface : & EntityInterface ) -> Vec< Binding > {
         let mut bindings : Vec< Binding > = Vec::new();
         for generic in interface.get_generics() {
