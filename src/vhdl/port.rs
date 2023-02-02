@@ -26,7 +26,7 @@ impl Port {
     }
 
     pub fn clone_invert( & self ) -> Port {
-        Port::new_with_default( & self.name, self.direction.invert(), & self.data_type,
+        Port::new_with_default( & self.name, self.direction.get_inverted(), & self.data_type,
             & self.default )
     }
 
@@ -44,6 +44,10 @@ impl Port {
 
     pub fn set_name( & mut self, name : & str ) {
         self.name = name.to_string();
+    }
+
+    pub fn invert( & mut self ) {
+        self.direction.invert();
     }
 }
 

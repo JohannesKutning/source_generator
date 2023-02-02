@@ -13,6 +13,8 @@ pub struct EntityInterface {
     name : String,
     class : String,
     #[serde(default)]
+    inverted : bool,
+    #[serde(default)]
     generics : Vec< Generic >,
     #[serde(default)]
     ports : Vec< Port >,
@@ -21,7 +23,7 @@ pub struct EntityInterface {
 impl EntityInterface {
     pub fn new( name : & str, class : & str ) -> EntityInterface {
         EntityInterface { name : name.to_string(), class : class.to_string(),
-            generics : Vec::new(), ports : Vec::new() }
+            inverted : false, generics : Vec::new(), ports : Vec::new() }
     }
 
     pub fn new_unnamed( class : & str ) -> EntityInterface {
@@ -40,14 +42,21 @@ impl EntityInterface {
         Ok( interface )
     }
 
+    pub fn from_file_inverted( name : & str, filename : & Path ) -> Result< EntityInterface, Box< dyn Error > > {
+        let mut interface = EntityInterface::from_file( name, filename )?;
+        interface.invert();
+        Ok( interface )
+    }
+
+    pub fn from_file_unnamed_inverted( file : & Path ) -> Result< EntityInterface, Box< dyn Error > > {
+        let schema = EntityInterface::read_schema()?;
+        let interface = EntityInterface::read_and_validate_description( file, & schema )?;
+        Ok( interface )
+    }
+
     pub fn clone_invert( & self ) -> EntityInterface {
         let mut inverted = EntityInterface::new( & self.name, & self.class );
-        for generic in self.get_generics() {
-            inverted.add_generic( generic.clone() );
-        }
-        for port in self.get_ports() {
-            inverted.add_port( port.clone_invert() );
-        }
+        inverted.invert();
         return inverted;
     }
 
@@ -80,6 +89,13 @@ impl EntityInterface {
 
     pub fn rename( & mut self, name : & str ) {
         self.name = name.to_string();
+    }
+
+    pub fn invert( & mut self ) {
+        for port in & mut self.ports {
+            port.invert();
+        }
+        self.inverted = ! self.inverted;
     }
 
     pub fn add_generic( & mut self, generic : Generic ) {
@@ -195,12 +211,12 @@ mod tests {
         interface.add_port( Port::new_with_default( "b", Direction::OUT, "std_logic", "'0'" ) );
         interface.add_port( Port::new( "c", Direction::INOUT, "boolean" ) );
         interface.add_port( Port::new( "d", Direction::BUFFER, "positive" ) );
-        let inverted = interface.clone_invert();
+        interface.invert();
         let mut source = String::new();
-        for generic in inverted.get_generics() {
+        for generic in interface.get_generics() {
             source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
         }
-        for port in inverted.get_ports() {
+        for port in interface.get_ports() {
             source.push_str( & format!( "{}", port.to_source_code( 0 ) ) );
         }
         assert_eq!( INVERTED, source );

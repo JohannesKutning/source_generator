@@ -10,7 +10,16 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn invert( & self ) -> Direction {
+    pub fn invert( & mut self ) {
+        match self {
+            Direction::IN => { * self = Direction::OUT },
+            Direction::OUT => { * self = Direction::IN },
+            Direction::INOUT => { * self = Direction::INOUT },
+            Direction::BUFFER => { * self = Direction::IN },
+        }
+    }
+
+    pub fn get_inverted( & self ) -> Direction {
         match self {
             Direction::IN => { Direction::OUT },
             Direction::OUT => { Direction::IN },
@@ -95,22 +104,50 @@ mod tests {
 
     #[test]
     fn invert_in() {
-        assert_eq!( Direction::IN.invert().to_string(), String::from( "out" ) );
+        let mut direction = Direction::IN;
+        direction.invert();
+        assert_eq!( direction.to_string(), String::from( "out" ) );
     }
 
     #[test]
     fn invert_out() {
-        assert_eq!( Direction::OUT.invert().to_string(), String::from( "in" ) );
+        let mut direction = Direction::OUT;
+        direction.invert();
+        assert_eq!( direction.to_string(), String::from( "in" ) );
     }
 
     #[test]
     fn invert_inout() {
-        assert_eq!( Direction::INOUT.invert().to_string(), String::from( "inout" ) );
+        let mut direction = Direction::INOUT;
+        direction.invert();
+        assert_eq!( direction.to_string(), String::from( "inout" ) );
     }
 
     #[test]
     fn invert_buffer() {
-        assert_eq!( Direction::BUFFER.invert().to_string(), String::from( "in" ) );
+        let mut direction = Direction::BUFFER;
+        direction.invert();
+        assert_eq!( direction.to_string(), String::from( "in" ) );
+    }
+
+    #[test]
+    fn get_inverted_in() {
+        assert_eq!( Direction::IN.get_inverted().to_string(), String::from( "out" ) );
+    }
+
+    #[test]
+    fn get_inverted_out() {
+        assert_eq!( Direction::OUT.get_inverted().to_string(), String::from( "in" ) );
+    }
+
+    #[test]
+    fn get_inverted_inout() {
+        assert_eq!( Direction::INOUT.get_inverted().to_string(), String::from( "inout" ) );
+    }
+
+    #[test]
+    fn get_inverted_buffer() {
+        assert_eq!( Direction::BUFFER.get_inverted().to_string(), String::from( "in" ) );
     }
 }
 
