@@ -1,0 +1,18 @@
+{
+    "class" : "avalon_mmi",
+    "generics" : [
+        { "name" : "ADDR_WIDTH", "data_type" : "positive" },
+        { "name" : "DATA_WIDTH", "data_type" : "positive" },
+        { "name" : "BYTE_COUNT", "data_type" : "positive" }
+    ],
+    "ports" : [
+        { "name" : "address", "direction" : "out", "data_type" : "std_logic_vector( ADDR_WIDTH - 1 downto 0 )" },
+        { "name" : "byteenable", "direction" : "out", "data_type" : "std_logic_vector( BYTE_COUNT - 1 downto 0 )" },
+        { "name" : "read", "direction" : "out", "data_type" : "std_logic" },
+        { "name" : "read_data", "direction" : "in", "data_type" : "std_logic_vector( DATA_WIDTH - 1 downto 0 )" },
+        { "name" : "response", "direction" : "in", "data_type" : "std_logic_vector( 1 downto 0 )" },
+        { "name" : "write", "direction" : "out", "data_type" : "std_logic" },
+        { "name" : "write_data", "direction" : "out", "data_type" : "std_logic_vector( DATA_WIDTH - 1 downto 0 )" }
+    ]
+}
+
