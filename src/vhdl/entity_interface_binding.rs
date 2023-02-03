@@ -1,11 +1,12 @@
-use crate::vhdl::binding::Binding;
+use crate::vhdl::generic_binding::GenericBinding;
+use crate::vhdl::port_binding::PortBinding;
 use crate::vhdl::entity_interface::EntityInterface;
 
 pub struct EntityInterfaceBinding {
     name : String,
     class : String,
-    generics : Vec< Binding >,
-    ports : Vec< Binding >,
+    generics : Vec< GenericBinding >,
+    ports : Vec< PortBinding >,
 }
 
 impl EntityInterfaceBinding {
@@ -25,23 +26,23 @@ impl EntityInterfaceBinding {
         & self.class
     }
 
-    pub fn get_generics( & self ) -> & Vec< Binding > {
+    pub fn get_generics( & self ) -> & Vec< GenericBinding > {
         & self.generics
     }
 
-    pub fn get_ports( & self ) -> & Vec< Binding > {
+    pub fn get_ports( & self ) -> & Vec< PortBinding > {
         & self.ports
     }
 
     pub fn connect_to_entity_interface( & mut self, entity : & EntityInterface ) {
         let mut idx = 0;
         for generic in & mut self.generics {
-            generic.connect_to_generic( & entity.get_generics()[ idx ] );
+            generic.connect( & entity.get_generics()[ idx ] );
             idx += 1;
         }
         idx = 0;
         for port in & mut self.ports {
-            port.connect_to_port( & entity.get_ports()[ idx ] );
+            port.connect( & entity.get_ports()[ idx ] );
             idx += 1;
         }
     }
@@ -50,7 +51,7 @@ impl EntityInterfaceBinding {
         self.ports.iter().any( |p| p.get_inner() == name )
     }
 
-    pub fn get_port_mut( & mut self, name : & str ) -> Option< & mut Binding > {
+    pub fn get_port_mut( & mut self, name : & str ) -> Option< & mut PortBinding > {
         for port in & mut self.ports {
             if port.get_inner() == name {
                 return Some( port );
@@ -59,18 +60,18 @@ impl EntityInterfaceBinding {
         None
     }
 
-    fn generic_bindings_from_interface( interface : & EntityInterface ) -> Vec< Binding > {
-        let mut bindings : Vec< Binding > = Vec::new();
+    fn generic_bindings_from_interface( interface : & EntityInterface ) -> Vec< GenericBinding > {
+        let mut bindings : Vec< GenericBinding > = Vec::new();
         for generic in interface.get_generics() {
-            bindings.push( Binding::from_generic( generic ) );
+            bindings.push( GenericBinding::from_generic( generic ) );
         }
         return bindings;
     }
 
-    fn port_bindings_from_interface( interface : & EntityInterface ) -> Vec< Binding > {
-        let mut bindings : Vec< Binding > = Vec::new();
+    fn port_bindings_from_interface( interface : & EntityInterface ) -> Vec< PortBinding > {
+        let mut bindings : Vec< PortBinding > = Vec::new();
         for port in interface.get_ports() {
-            bindings.push( Binding::from_port( port ) );
+            bindings.push( PortBinding::from_port( port ) );
         }
         return bindings;
     }

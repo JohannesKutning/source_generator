@@ -35,6 +35,10 @@ impl Generic {
     pub fn get_data_type( & self ) -> & String {
         & self.data_type
     }
+
+    pub fn has_default( & self ) -> bool {
+        ! self.default.is_empty()
+    }
 }
 
 impl Element for Generic {

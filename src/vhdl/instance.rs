@@ -70,6 +70,10 @@ impl Instance {
         & self.name
     }
 
+    pub fn get_interfaces( & self ) -> & Vec< EntityInterfaceBinding > {
+        & self.bindings.get_interfaces()
+    }
+
     pub fn get_port_data_type_by_name( & self, name : & str ) -> Option< & String > {
         for interface in self.bindings.get_interfaces() {
             for port in interface.get_ports() {
@@ -85,7 +89,9 @@ impl Instance {
         let mut bindings : Vec< Box< dyn Element > > = Vec::new();
         for interface in self.bindings.get_interfaces() {
             for generic in interface.get_generics() {
-                bindings.push( Box::new( ( * generic ).clone() ) );
+                if generic.is_bound() || generic.requires_binding() {
+                    bindings.push( Box::new( ( * generic ).clone() ) );
+                }
             }
         }
         return bindings;

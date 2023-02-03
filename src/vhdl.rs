@@ -20,7 +20,8 @@ pub mod port;
 pub mod entity_interface;
 pub mod entity_interface_binding_list;
 pub mod entity_interface_binding;
-pub mod binding;
+pub mod generic_binding;
+pub mod port_binding;
 
 pub mod architecture;
 pub mod block_declarative_item;
