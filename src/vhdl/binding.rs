@@ -59,6 +59,10 @@ impl Binding {
     pub fn get_outer( & self ) -> & String {
         & self.outer
     }
+
+    pub fn is_bound( & self ) -> bool {
+        ! self.outer.is_empty()
+    }
 }
 
 impl Element for Binding {
