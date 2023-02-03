@@ -54,8 +54,8 @@ impl EntityInterface {
         Ok( interface )
     }
 
-    pub fn clone_invert( & self ) -> EntityInterface {
-        let mut inverted = EntityInterface::new( & self.name, & self.class );
+    pub fn clone_inverted( & self ) -> EntityInterface {
+        let mut inverted = self.clone();
         inverted.invert();
         return inverted;
     }
