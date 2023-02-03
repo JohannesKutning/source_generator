@@ -153,15 +153,8 @@ mod tests {
      */
     #[test]
     fn port_interface() {
-        let mut interface = EntityInterface::new_unnamed( "test" );
-        interface.add_port( Port::new_with_default( "a", Direction::IN, "integer", "0" ) );
-        interface.add_port( Port::new_with_default( "b", Direction::OUT, "std_logic", "'0'" ) );
-        interface.add_port( Port::new( "c", Direction::INOUT, "boolean" ) );
-        interface.add_port( Port::new( "d", Direction::BUFFER, "positive" ) );
-        let mut source = String::new();
-        for port in interface.get_ports() {
-            source.push_str( & format!( "{}", port.to_source_code( 0 ) ) );
-        }
+        let interface = new_test_interface_ports_only();
+        let source = interface_to_string( & interface );
         assert_eq!( PORTS, source );
     }
 
@@ -170,15 +163,8 @@ mod tests {
      */
     #[test]
     fn generic_interface() {
-        let mut interface = EntityInterface::new_unnamed( "test" );
-        interface.add_generic( Generic::new_with_default( "A", "integer", "0" ) );
-        interface.add_generic( Generic::new_with_default( "B", "std_logic", "'0'" ) );
-        interface.add_generic( Generic::new( "C", "boolean" ) );
-        interface.add_generic( Generic::new( "D", "positive" ) );
-        let mut source = String::new();
-        for generic in interface.get_generics() {
-            source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
-        }
+        let interface = new_test_interface_generics_only();
+        let source = interface_to_string( & interface );
         assert_eq!( GENERICS, source );
     }
 
@@ -186,13 +172,7 @@ mod tests {
     fn interface_from_json() -> Result< (), Box< dyn Error > > {
         let interface = EntityInterface::from_file_unnamed(
                 Path::new( "tests/vhdl/interface.json" ) )?;
-        let mut source = String::new();
-        for generic in interface.get_generics() {
-            source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
-        }
-        for port in interface.get_ports() {
-            source.push_str( & format!( "{}", port.to_source_code( 0 ) ) );
-        }
+        let source = interface_to_string( & interface );
         assert_eq!( format!( "{}{}", GENERICS, PORTS ), source );
         Ok(())
     }
@@ -202,38 +182,54 @@ mod tests {
      */
     #[test]
     fn invert() {
-        let mut interface = EntityInterface::new_unnamed( "test" );
-        interface.add_generic( Generic::new_with_default( "A", "integer", "0" ) );
-        interface.add_generic( Generic::new_with_default( "B", "std_logic", "'0'" ) );
-        interface.add_generic( Generic::new( "C", "boolean" ) );
-        interface.add_generic( Generic::new( "D", "positive" ) );
-        interface.add_port( Port::new_with_default( "a", Direction::IN, "integer", "0" ) );
-        interface.add_port( Port::new_with_default( "b", Direction::OUT, "std_logic", "'0'" ) );
-        interface.add_port( Port::new( "c", Direction::INOUT, "boolean" ) );
-        interface.add_port( Port::new( "d", Direction::BUFFER, "positive" ) );
+        let mut interface = new_test_interface();
         interface.invert();
-        let mut source = String::new();
-        for generic in interface.get_generics() {
-            source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
-        }
-        for port in interface.get_ports() {
-            source.push_str( & format!( "{}", port.to_source_code( 0 ) ) );
-        }
+        let source = interface_to_string( & interface );
         assert_eq!( INVERTED, source );
     }
 
     #[test]
     fn clone_inverted() {
+        let interface = new_test_interface();
+        let interface = interface.clone_inverted();
+        let source = interface_to_string( & interface );
+        assert_eq!( INVERTED, source );
+    }
+
+    fn new_test_interface() -> EntityInterface {
         let mut interface = EntityInterface::new_unnamed( "test" );
+        add_generics( & mut interface );
+        add_ports( & mut interface );
+        return interface;
+    }
+
+    fn new_test_interface_generics_only() -> EntityInterface {
+        let mut interface = EntityInterface::new_unnamed( "test" );
+        add_generics( & mut interface );
+        return interface;
+    }
+
+    fn new_test_interface_ports_only() -> EntityInterface {
+        let mut interface = EntityInterface::new_unnamed( "test" );
+        add_ports( & mut interface );
+        return interface;
+    }
+
+    fn add_generics( interface : & mut EntityInterface ) {
         interface.add_generic( Generic::new_with_default( "A", "integer", "0" ) );
         interface.add_generic( Generic::new_with_default( "B", "std_logic", "'0'" ) );
         interface.add_generic( Generic::new( "C", "boolean" ) );
         interface.add_generic( Generic::new( "D", "positive" ) );
+    }
+
+    fn add_ports( interface : & mut EntityInterface ) {
         interface.add_port( Port::new_with_default( "a", Direction::IN, "integer", "0" ) );
         interface.add_port( Port::new_with_default( "b", Direction::OUT, "std_logic", "'0'" ) );
         interface.add_port( Port::new( "c", Direction::INOUT, "boolean" ) );
         interface.add_port( Port::new( "d", Direction::BUFFER, "positive" ) );
-        let interface = interface.clone_inverted();
+    }
+
+    fn interface_to_string( interface : & EntityInterface ) -> String {
         let mut source = String::new();
         for generic in interface.get_generics() {
             source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
@@ -241,7 +237,7 @@ mod tests {
         for port in interface.get_ports() {
             source.push_str( & format!( "{}", port.to_source_code( 0 ) ) );
         }
-        assert_eq!( INVERTED, source );
+        return source;
     }
 }
 
