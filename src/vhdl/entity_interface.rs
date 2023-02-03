@@ -201,7 +201,7 @@ mod tests {
      * Invert an entity interface with multiple generics and ports
      */
     #[test]
-    fn invert_interface() {
+    fn invert() {
         let mut interface = EntityInterface::new_unnamed( "test" );
         interface.add_generic( Generic::new_with_default( "A", "integer", "0" ) );
         interface.add_generic( Generic::new_with_default( "B", "std_logic", "'0'" ) );
@@ -212,6 +212,28 @@ mod tests {
         interface.add_port( Port::new( "c", Direction::INOUT, "boolean" ) );
         interface.add_port( Port::new( "d", Direction::BUFFER, "positive" ) );
         interface.invert();
+        let mut source = String::new();
+        for generic in interface.get_generics() {
+            source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
+        }
+        for port in interface.get_ports() {
+            source.push_str( & format!( "{}", port.to_source_code( 0 ) ) );
+        }
+        assert_eq!( INVERTED, source );
+    }
+
+    #[test]
+    fn clone_inverted() {
+        let mut interface = EntityInterface::new_unnamed( "test" );
+        interface.add_generic( Generic::new_with_default( "A", "integer", "0" ) );
+        interface.add_generic( Generic::new_with_default( "B", "std_logic", "'0'" ) );
+        interface.add_generic( Generic::new( "C", "boolean" ) );
+        interface.add_generic( Generic::new( "D", "positive" ) );
+        interface.add_port( Port::new_with_default( "a", Direction::IN, "integer", "0" ) );
+        interface.add_port( Port::new_with_default( "b", Direction::OUT, "std_logic", "'0'" ) );
+        interface.add_port( Port::new( "c", Direction::INOUT, "boolean" ) );
+        interface.add_port( Port::new( "d", Direction::BUFFER, "positive" ) );
+        let interface = interface.clone_inverted();
         let mut source = String::new();
         for generic in interface.get_generics() {
             source.push_str( & format!( "{}", generic.to_source_code( 0 ) ) );
