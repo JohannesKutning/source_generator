@@ -25,7 +25,7 @@ impl Port {
                 default : default.to_string() }
     }
 
-    pub fn clone_invert( & self ) -> Port {
+    pub fn clone_inverted( & self ) -> Port {
         Port::new_with_default( & self.name, self.direction.get_inverted(), & self.data_type,
             & self.default )
     }
@@ -128,6 +128,20 @@ mod tests {
     fn deserialize_invalid() {
         let ret : Result< Port, serde_json::Error > = serde_json::from_str( "\"invalid\"" );
         assert!( ret.is_err() );
+    }
+
+    #[test]
+    fn invert() {
+        let mut port = Port::new( "test", Direction::IN, "boolean" );
+        port.invert();
+        assert_eq!( port.to_source_code( 0 ), OUTPUT.to_string() );
+    }
+
+    #[test]
+    fn clone_inverted() {
+        let port = Port::new( "test", Direction::IN, "boolean" );
+        let port = port.clone_inverted();
+        assert_eq!( port.to_source_code( 0 ), OUTPUT.to_string() );
     }
 }
 
