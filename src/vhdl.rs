@@ -36,3 +36,5 @@ pub mod sensitivity_list;
 pub mod process_declarative_item;
 pub mod variable_declaration;
 
+pub mod match_index;
+

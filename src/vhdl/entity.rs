@@ -87,11 +87,21 @@ impl Entity {
         & self.interfaces
     }
 
+    pub fn get_generics( & self ) -> Vec< Generic > {
+        let mut vec = Vec::new();
+        for interface in & self.interfaces {
+            for generic in interface.get_generics() {
+                vec.push( generic.clone() );
+            }
+        }
+        return vec;
+    }
+
     fn generics_to_source_code( & self, indent : usize ) -> String {
         let mut source = String::new();
         let indent_str = crate::util::indent( indent );
         let list_indent_str = crate::util::indent( indent + 1 );
-        let generic_list = self.get_generics();
+        let generic_list = self.get_generics_boxed();
         if ! generic_list.is_empty() {
             let list = to_source_code_list( & generic_list,
                     & format!( ";\n{}", list_indent_str ) );
@@ -101,7 +111,7 @@ impl Entity {
         return source;
     }
 
-    fn get_generics( & self ) -> Vec< Box< dyn Element > > {
+    fn get_generics_boxed( & self ) -> Vec< Box< dyn Element > > {
         let mut generic_list : Vec< Box< dyn Element > > = Vec::new();
         for interface in & self.interfaces {
             for generic in interface.get_generics() {

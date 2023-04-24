@@ -1,7 +1,10 @@
 use crate::vhdl::generic_binding::GenericBinding;
 use crate::vhdl::port_binding::PortBinding;
 use crate::vhdl::entity_interface::EntityInterface;
+use crate::vhdl::direction::Direction;
+use crate::vhdl::signal_declaration::SignalDeclaraion;
 
+#[derive(Clone)]
 pub struct EntityInterfaceBinding {
     name : String,
     class : String,
@@ -34,6 +37,20 @@ impl EntityInterfaceBinding {
         & self.ports
     }
 
+    pub fn get_unbound_generics( & self ) -> Vec< GenericBinding > {
+        let mut vec = Vec::new();
+        for generic in & self.generics {
+            if ! generic.is_bound() {
+                vec.push( generic.clone() );
+            }
+        }
+        return vec;
+    }
+
+    pub fn get_unbound_ports( & self ) -> & Vec< PortBinding > {
+        & self.ports
+    }
+
     pub fn connect_to_entity_interface( & mut self, entity : & EntityInterface ) {
         let mut idx = 0;
         for generic in & mut self.generics {
@@ -47,8 +64,21 @@ impl EntityInterfaceBinding {
         }
     }
 
+    pub fn contains_generic( & self, name : & str ) -> bool {
+        self.generics.iter().any( |p| p.get_inner() == name )
+    }
+
     pub fn contains_port( & self, name : & str ) -> bool {
         self.ports.iter().any( |p| p.get_inner() == name )
+    }
+
+    pub fn get_generic_mut( & mut self, name : & str ) -> Option< & mut GenericBinding > {
+        for generic in & mut self.generics {
+            if generic.get_inner() == name {
+                return Some( generic );
+            }
+        }
+        None
     }
 
     pub fn get_port_mut( & mut self, name : & str ) -> Option< & mut PortBinding > {
@@ -58,6 +88,70 @@ impl EntityInterfaceBinding {
             }
         }
         None
+    }
+
+    pub fn get_entity_matching( & self, entity : & EntityInterface ) -> u32 {
+        let instance_name = self.get_name().to_string().to_lowercase();
+        let entity_name = entity.get_name().to_string().to_lowercase();
+        let class_match : bool = self.get_class() == entity.get_class();
+        let name_match : bool = instance_name == entity_name;
+        let instance_in_entity = entity_name.contains( & instance_name );
+        let entity_in_instance = instance_name.contains( & entity_name );
+        if class_match && name_match {
+            return 3;
+        }
+        else if instance_in_entity || entity_in_instance {
+            return 2;
+        }
+        else if class_match {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    pub fn get_instance_matching( & self, inst_b : & EntityInterfaceBinding ) -> u32 {
+        let inst_a_name = self.get_name().to_string().to_lowercase();
+        let inst_b_name = inst_b.get_name().to_string().to_lowercase();
+        let class_match : bool = self.get_class() == inst_b.get_class();
+        let name_match : bool = inst_a_name == inst_b_name;
+        let inst_a_in_inst_b = inst_b_name.contains( & inst_a_name );
+        let inst_b_in_inst_a = inst_a_name.contains( & inst_b_name );
+        if class_match && name_match {
+            return 3;
+        }
+        else if inst_a_in_inst_b || inst_b_in_inst_a {
+            return 2;
+        }
+        else if class_match {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    pub fn get_connection_signal_list( & self, inst_name_a : & str, inst_name_b : & str )
+            -> Vec< SignalDeclaraion > {
+        let mut signal_list : Vec< SignalDeclaraion > = Vec::new();
+        for port in self.get_ports() {
+            println!( "{} {}", port.get_inner(), port.get_direction() );
+            let name = match port.get_direction() {
+                Direction::IN | Direction::INOUT =>
+                    format!( "{}_to_{}_{}", inst_name_b, inst_name_a, port.get_inner() ),
+                Direction::OUT | Direction::BUFFER =>
+                    format!( "{}_to_{}_{}", inst_name_a, inst_name_b, port.get_inner() ),
+            };
+            signal_list.push( SignalDeclaraion::new( & name, port.get_data_type() ) );
+        }
+        return signal_list;
+    }
+
+    pub fn connect_to_signal_list( & mut self, signal_list : & Vec< SignalDeclaraion > ) {
+        for ( idx, port ) in self.ports.iter_mut().enumerate() {
+            port.connect_by_name( signal_list[ idx ].get_name() );
+        }
     }
 
     fn generic_bindings_from_interface( interface : & EntityInterface ) -> Vec< GenericBinding > {

@@ -13,7 +13,7 @@ impl GenericBinding {
     pub fn from_generic( generic : & Generic ) -> GenericBinding{
         GenericBinding { inner : generic.get_name().to_string(),
                 data_type : generic.get_data_type().to_string(),
-                outer : String::new(), requires_binding : generic.has_default() }
+                outer : String::new(), requires_binding : ! generic.has_default() }
     }
 
     pub fn connect( & mut self, generic : & Generic ) {
@@ -63,7 +63,7 @@ mod tests {
     #[test]
     fn from_generic() {
         let binding = GenericBinding::from_generic( & Generic::new( "test", "boolean" ) );
-        assert_eq!( & binding.to_source_code( 0 ), "" );
+        assert_eq!( & binding.to_source_code( 0 ), "test => " );
     }
 
     #[test]

@@ -6,31 +6,17 @@ use crate::vhdl::entity::Entity;
 use crate::vhdl::entity_interface::EntityInterface;
 use crate::vhdl::entity_interface_binding_list::EntityInterfaceBindingList;
 use crate::vhdl::entity_interface_binding::EntityInterfaceBinding;
+use crate::vhdl::generic_binding::GenericBinding;
 use crate::vhdl::keywords::*;
+use crate::vhdl::match_index::MatchIndex;
+use crate::vhdl::signal_declaration::SignalDeclaraion;
 
+#[derive(Clone)]
 pub struct Instance {
     name : String,
     library : String,
     entity : String,
     bindings : EntityInterfaceBindingList,
-}
-
-struct Match {
-    pub index : usize,
-    pub strength : u32,
-}
-
-impl Match {
-    pub fn new() -> Match {
-        Match { index : 0, strength : 0 }
-    }
-
-    pub fn update( & mut self, index : usize, strength : u32 ) {
-        if self.strength < strength {
-            self.index = index;
-            self.strength = strength;
-        }
-    }
 }
 
 impl Instance {
@@ -45,19 +31,29 @@ impl Instance {
         let entity_interfaces = entity.get_interfaces();
         let mut unbound_entity_interfaces = vec![ true; entity_interfaces.len() ];
         for instance_interface in self.bindings.get_interfaces_mut() {
-            let mut m = Match::new();
+            let mut match_index = MatchIndex::new();
             for ( entity_idx, entity_interface ) in entity_interfaces.iter().enumerate() {
                 if ! unbound_entity_interfaces[ entity_idx ] {
                     continue;
                 }
-                m.update( entity_idx,
-                        Instance::get_match_strength( instance_interface, entity_interface ) );
+                match_index.update( entity_idx, Instance::get_match_strength(
+                        instance_interface, entity_interface ) );
             }
-            if m.strength > 0 {
-                instance_interface.connect_to_entity_interface( & entity_interfaces[ m.index ] );
-                unbound_entity_interfaces[ m.index ] = false;
+            if match_index.is_match() {
+                instance_interface.connect_to_entity_interface( & entity_interfaces[ match_index.position() ] );
+                unbound_entity_interfaces[ match_index.position() ] = false;
             }
         }
+    }
+
+    pub fn connect_interface_by_index_to_signal_list( & mut self, index : usize, signal_list : & Vec< SignalDeclaraion > ) {
+        self.bindings.get_interfaces_mut()[ index ].connect_to_signal_list( signal_list );
+    }
+
+    pub fn connect_generic( & mut self, inner : & str, outer : & str ) -> Result< (), VhdlError > {
+        let binding = self.bindings.get_generic_mut( inner )?;
+        binding.connect_by_name( outer );
+        Ok(())
     }
 
     pub fn connect_to_port( & mut self, inner : & str, outer : & str ) -> Result< (), VhdlError > {
@@ -72,6 +68,31 @@ impl Instance {
 
     pub fn get_interfaces( & self ) -> & Vec< EntityInterfaceBinding > {
         & self.bindings.get_interfaces()
+    }
+
+    pub fn get_instance_interface_matches( & self, inst_b : & Instance ) -> Vec< ( usize, usize ) > {
+        let mut matches = Vec::new();
+        for ( idx_a, interface_a ) in self.get_interfaces().iter().enumerate() {
+            let mut match_index = MatchIndex::new();
+            for ( idx_b, interface_b ) in inst_b.get_interfaces().iter().enumerate() {
+                match_index.update( idx_b, interface_a.get_instance_matching( interface_b ) );
+            }
+            if match_index.is_match() {
+                matches.push( ( idx_a, match_index.position() ) );
+                println!( "    match {} {}", idx_a, match_index.position() );
+            }
+        }
+        return matches;
+    }
+
+    pub fn get_unbound_generics( & self ) -> Vec< GenericBinding > {
+        let mut generics : Vec< GenericBinding > = Vec::new();
+        for interface in self.bindings.get_interfaces() {
+            for generic in interface.get_unbound_generics()  {
+                generics.push( generic );
+            }
+        }
+        return generics;
     }
 
     pub fn get_port_data_type_by_name( & self, name : & str ) -> Option< & String > {
@@ -145,7 +166,7 @@ impl Element for Instance {
             source.push_str( & format!( "{}{} {} (\n", map_indent_str, GENERIC, MAP ) );
             source.push_str( & format!( "{}{}\n", binding_indent_str,
                     to_source_code_list( & generic_bindings, & format!( ",\n{}", binding_indent_str ) ) ) );
-            source.push_str( & format!( "{} )", map_indent_str ) );
+            source.push_str( & format!( "{})", map_indent_str ) );
         }
         let port_bindings : Vec< Box< dyn Element > > = self.get_port_bindings();
         let has_port_bindings : bool = ! port_bindings.is_empty();
@@ -156,7 +177,7 @@ impl Element for Instance {
             source.push_str( & format!( "{}{} {} (\n", map_indent_str, PORT, MAP ) );
             source.push_str( & format!( "{}{}\n", binding_indent_str,
                     to_source_code_list( & port_bindings, & format!( ",\n{}", binding_indent_str ) ) ) );
-            source.push_str( & format!( "{} )", map_indent_str ) );
+            source.push_str( & format!( "{})", map_indent_str ) );
         }
         source.push_str( ";\n" );
         return source;

@@ -12,6 +12,11 @@ use crate::vhdl::concurrent_statement::ConcurrentStatement;
 use crate::vhdl::signal_assignment::SignalAssignment;
 use crate::vhdl::instance::Instance;
 use crate::vhdl::process::Process;
+use crate::vhdl::entity_interface_binding::EntityInterfaceBinding;
+use crate::vhdl::generic::Generic;
+use crate::vhdl::generic_binding::GenericBinding;
+use crate::vhdl::direction::Direction;
+use crate::vhdl::match_index::MatchIndex;
 
 pub struct Architecture {
     name : String,
@@ -38,6 +43,12 @@ impl Architecture {
         self.declarations.add_signal( signal );
     }
 
+    pub fn add_signal_declaration_list( & mut self, signal_list : & Vec< SignalDeclaraion > ) {
+        for signal in signal_list {
+            self.add_signal_declaration( signal );
+        }
+    }
+
     pub fn add_signal_assignment( & mut self, signal_assignment : SignalAssignment ) {
         self.statements.push( Box::< SignalAssignment >::new( signal_assignment ) );
     }
@@ -51,11 +62,66 @@ impl Architecture {
     }
 
     pub fn connect_instance_to_entity( & mut self, name : & str ) -> Result< (), VhdlError > {
-        if ! self.instances.contains_key( name ) {
-            return Err( VhdlError::new( & format!( "error: Instance {:?} not found in architecture {:?}!",
-                    name, self.name ) ) );
-        }
+        self.requires_instance( name )?;
         self.instances.get_mut( name ).unwrap().connect_to_entity( & self.entity );
+        Ok(())
+    }
+
+    pub fn connect_instance_to_instance( & mut self, inst_name_a : & str, inst_name_b: & str )
+            -> Result< (), VhdlError > {
+        println!( "connect_instance_to_instance {} {}", inst_name_a, inst_name_b );
+        let mut matches : Vec< ( usize, usize ) > = Vec::new();
+        {
+            self.requires_instance( inst_name_a )?;
+            self.requires_instance( inst_name_b )?;
+            let inst_a : & Instance = self.instances.get( inst_name_a ).unwrap();
+            let inst_b : & Instance = self.instances.get( inst_name_b ).unwrap();
+            // find a list of matching interfaces
+            matches = inst_a.get_instance_interface_matches( & inst_b );
+        }
+        let mut connection_signal_lists : Vec< Vec< SignalDeclaraion > > = Vec::new();
+        {
+            for ( a, _ ) in & matches {
+                let mut inst : & mut Instance = self.instances.get_mut( inst_name_a ).unwrap();
+                let interface_a : & EntityInterfaceBinding = & inst.get_interfaces()[ * a ];
+                let signal_list = interface_a.get_connection_signal_list( inst_name_a, inst_name_b );
+                inst.connect_interface_by_index_to_signal_list( * a, & signal_list );
+                connection_signal_lists.push( signal_list );
+            }
+        }
+        {
+            for ( i, ( _, b ) ) in matches.iter().enumerate() {
+                let mut inst : & mut Instance = self.instances.get_mut( inst_name_b ).unwrap();
+                inst.connect_interface_by_index_to_signal_list( * b, & connection_signal_lists[ i ] );
+            }
+        }
+        {
+            for signal_list in & connection_signal_lists {
+                self.add_signal_declaration_list( signal_list );
+            }
+        }
+        Ok(())
+    }
+
+    pub fn connect_instance_unbound_by_name( & mut self, instance : & str )
+            -> Result< (), VhdlError > {
+        println!( "connect_instance_unbound_by_name" );
+        self.requires_instance( instance )?;
+        let mut matches : Vec< ( String, String ) > = Vec::new();
+        {
+            let inst : Instance = ( * self.instances.get( instance ).unwrap() ).clone();
+            for generic in & inst.get_unbound_generics() {
+                let outer = self.get_instance_generic_match( generic );
+                matches.push( ( generic.get_inner().clone(), outer ) );
+            }
+        }
+        let mut inst : & mut Instance = self.instances.get_mut( instance ).unwrap();
+        for ( inner, outer ) in matches {
+            if ! outer.is_empty() {
+                inst.connect_generic( & inner, & outer )?;
+            }
+        }
+
         Ok(())
     }
 
@@ -97,6 +163,81 @@ impl Architecture {
                             "error: Architecture {:?} does not contain instance {:?}", self.name,
                             instance ) ) )
         }
+    }
+
+    fn requires_instance( & self, name : & str ) -> Result< (), VhdlError > {
+        if ! self.instances.contains_key( name ) {
+            return Err( VhdlError::new( & format!( "error: Instance {:?} not found in architecture {:?}!",
+                    name, self.name ) ) );
+        }
+        Ok(())
+    }
+
+    fn add_instance_to_instance_interface_signals( & mut self, inst_a : Instance, inst_b : Instance ) {
+        for interface in inst_a.get_interfaces() {
+            println!( "interface class : {:?}", interface.get_class() );
+            self.add_instance_connection_signals( inst_a.get_name(), inst_b.get_name(), interface );
+        }
+    }
+
+    fn add_instance_connection_signals( & mut self, inst_a_name : & str, inst_b_name : & str, interface : & EntityInterfaceBinding ) {
+        for port in interface.get_ports() {
+            let signal_name = match port.get_direction() {
+                Direction::IN => format!( "{}_to_{}_{}", inst_b_name, inst_a_name, port.get_inner() ),
+                Direction::OUT => format!( "{}_to_{}_{}", inst_a_name, inst_b_name, port.get_inner() ),
+                Direction::INOUT => format!( "{}_to_{}_{}", inst_a_name, inst_b_name, port.get_inner() ),
+                Direction::BUFFER => format!( "{}_to_{}_{}", inst_a_name, inst_b_name, port.get_inner() ),
+            };
+            self.add_signal_declaration( & SignalDeclaraion::new( & signal_name, port.get_data_type() ) );
+        }
+    }
+
+    fn get_instance_generic_match( & self, binding : & GenericBinding ) -> String {
+        let constants = self.declarations.get_constants();
+        let mut constant_match = MatchIndex::new();
+        for ( idx, constant ) in constants.iter().enumerate() {
+            constant_match.update( idx,
+                    self.get_generic_constant_match_strength( binding, constant) );
+        }
+        let generics = self.entity.get_generics();
+        let mut generic_match = MatchIndex::new();
+        for ( idx, generic ) in generics.iter().enumerate() {
+            generic_match.update( idx,
+                    self.get_generic_generic_match_strength( binding, generic ) );
+        }
+        // in case both matches are zero constant is not greater than generic
+        if constant_match.strength > generic_match.strength {
+            return constants[ constant_match.index ].get_name().clone();
+        }
+        else if generic_match.strength > 0 {
+            return generics[ generic_match.index ].get_name().clone();
+        }
+        return String::new();
+    }
+
+    fn get_generic_constant_match_strength( & self, _binding : & GenericBinding,
+            _constant : & ConstantDeclaration ) -> u32 {
+        return 0;
+    }
+
+    fn get_generic_generic_match_strength( & self, binding : & GenericBinding,
+            generic : & Generic ) -> u32 {
+        let binding_name = binding.get_inner().to_string().to_lowercase();
+        let generic_name = generic.get_name().to_string().to_lowercase();
+        let data_type_match : bool = binding.get_data_type() == generic.get_data_type();
+        let name_match : bool = binding_name == generic_name;
+        let binding_in_generic = generic_name.contains( & binding_name );
+        let generic_in_binding = binding_name.contains( & generic_name );
+        if ! data_type_match {
+            return 0;
+        }
+        if name_match {
+            return 3;
+        }
+        else if binding_in_generic || generic_in_binding {
+            return 2;
+        }
+        return 1;
     }
 }
 
@@ -184,6 +325,14 @@ mod tests {
 
         assert_eq!( architecture.to_source_code( 0 ),
             format!( "{}{}{}{}{}", ENTITY_TEST, HEADER, CONSTANT_DECLARATION, BEGIN, END ) );
+    }
+
+    /**
+     * Create a architecture with a constant declaration.
+     */
+    #[test]
+    fn connect_instance_to_instance() {
+        let mut _architecture = Architecture::new( NAME, & Entity::new( ENTITY ) );
     }
 }
 

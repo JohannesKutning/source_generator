@@ -40,6 +40,10 @@ impl BlockDeclarativeList {
     pub fn contains_signal_by_name( & self, name : & str ) -> bool {
         self.signals.iter().any( | s | s.get_name() == name )
     }
+
+    pub fn get_constants( & self ) -> & Vec< ConstantDeclaration > {
+        & self.constants
+    }
 }
 
 impl Element for BlockDeclarativeList {
