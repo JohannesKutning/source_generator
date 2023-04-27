@@ -10,6 +10,7 @@ use crate::vhdl::known_libraries::get_known_library_use;
 use crate::vhdl::generic::Generic;
 use crate::vhdl::port::Port;
 use crate::vhdl::entity_interface::EntityInterface;
+use crate::vhdl::vhdl_error::VhdlError;
 
 #[derive(Clone)]
 pub struct Entity {
@@ -25,13 +26,13 @@ impl Entity {
         let mut entity = Entity { name : String::from( name ), library : "work".to_string(),
                 description : SingleLineComment::new(), libraries : LibraryList::new(),
                 interfaces : Vec::new() };
-        entity.add_interface( & EntityInterface::new( "", "__default__" ) );
+        entity.add_interface( & EntityInterface::new( "", "__default__" ) ).unwrap();
         return entity;
     }
 
     pub fn with_interface( name : & str, interface : & EntityInterface ) -> Entity {
         let mut entity = Entity::new( name );
-        entity.add_interface( interface );
+        entity.add_interface( interface ).unwrap();
         return entity;
     }
 
@@ -68,11 +69,20 @@ impl Entity {
         self.interfaces[ 0 ].add_port( port );
     }
 
-    pub fn add_interface( & mut self, interface : & EntityInterface ) {
+    pub fn add_interface( & mut self, interface : & EntityInterface )
+            -> Result< (), VhdlError > {
+        if self.contains_interface( interface ) {
+            return Err( VhdlError::new( & format!(
+                "error: Entity {:?} already contains an interface of class {:?} and name {:?}",
+                self.get_name(),
+                interface.get_class(),
+                interface.get_name() ) ) );
+        }
         for data_type in interface.get_data_types() {
             self.add_missing_library_use( & data_type );
         }
         self.interfaces.push( interface.clone() );
+        Ok(())
     }
 
     pub fn get_name( & self ) -> & String {
@@ -85,6 +95,16 @@ impl Entity {
 
     pub fn get_interfaces( & self ) -> & Vec< EntityInterface > {
         & self.interfaces
+    }
+
+    pub fn contains_interface( & self, interface : & EntityInterface ) -> bool {
+        for i in & self.interfaces {
+            if i.get_name() == interface.get_name() &&
+                    i.get_class() == interface.get_class() {
+                return true;
+            }
+        }
+        return false;
     }
 
     pub fn get_generics( & self ) -> Vec< Generic > {
@@ -274,9 +294,21 @@ mod tests {
                 Path::new( "tests/vhdl/interface.json" ) )?;
 
         let mut entity = Entity::new( NAME );
-        entity.add_interface( & interface );
+        entity.add_interface( & interface ).unwrap();
         assert_eq!( entity.to_source_code( 0 ),
             format!( "{}{}{}{}{}", USE_STD_LOGIC_1164, HEADER, INTERFACE, BEGIN, END ) );
+        Ok(())
+    }
+
+    #[test]
+    fn interface_already_exists_error() -> Result< (), Box< dyn Error > > {
+        let interface = EntityInterface::from_file( "test",
+                Path::new( "tests/vhdl/interface.json" ) )?;
+
+        let mut entity = Entity::new( NAME );
+        entity.add_interface( & interface ).unwrap();
+        let ret = entity.add_interface( & interface );
+        assert!( ret.is_err() );
         Ok(())
     }
 

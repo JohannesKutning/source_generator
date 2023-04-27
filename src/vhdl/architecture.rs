@@ -15,7 +15,6 @@ use crate::vhdl::process::Process;
 use crate::vhdl::entity_interface_binding::EntityInterfaceBinding;
 use crate::vhdl::generic::Generic;
 use crate::vhdl::generic_binding::GenericBinding;
-use crate::vhdl::direction::Direction;
 use crate::vhdl::match_index::MatchIndex;
 
 pub struct Architecture {
@@ -70,7 +69,7 @@ impl Architecture {
     pub fn connect_instance_to_instance( & mut self, inst_name_a : & str, inst_name_b: & str )
             -> Result< (), VhdlError > {
         println!( "connect_instance_to_instance {} {}", inst_name_a, inst_name_b );
-        let mut matches : Vec< ( usize, usize ) > = Vec::new();
+        let matches;
         {
             self.requires_instance( inst_name_a )?;
             self.requires_instance( inst_name_b )?;
@@ -82,7 +81,7 @@ impl Architecture {
         let mut connection_signal_lists : Vec< Vec< SignalDeclaraion > > = Vec::new();
         {
             for ( a, _ ) in & matches {
-                let mut inst : & mut Instance = self.instances.get_mut( inst_name_a ).unwrap();
+                let inst : & mut Instance = self.instances.get_mut( inst_name_a ).unwrap();
                 let interface_a : & EntityInterfaceBinding = & inst.get_interfaces()[ * a ];
                 let signal_list = interface_a.get_connection_signal_list( inst_name_a, inst_name_b );
                 inst.connect_interface_by_index_to_signal_list( * a, & signal_list );
@@ -91,7 +90,7 @@ impl Architecture {
         }
         {
             for ( i, ( _, b ) ) in matches.iter().enumerate() {
-                let mut inst : & mut Instance = self.instances.get_mut( inst_name_b ).unwrap();
+                let inst : & mut Instance = self.instances.get_mut( inst_name_b ).unwrap();
                 inst.connect_interface_by_index_to_signal_list( * b, & connection_signal_lists[ i ] );
             }
         }
@@ -115,7 +114,7 @@ impl Architecture {
                 matches.push( ( generic.get_inner().clone(), outer ) );
             }
         }
-        let mut inst : & mut Instance = self.instances.get_mut( instance ).unwrap();
+        let inst : & mut Instance = self.instances.get_mut( instance ).unwrap();
         for ( inner, outer ) in matches {
             if ! outer.is_empty() {
                 inst.connect_generic( & inner, & outer )?;
@@ -171,25 +170,6 @@ impl Architecture {
                     name, self.name ) ) );
         }
         Ok(())
-    }
-
-    fn add_instance_to_instance_interface_signals( & mut self, inst_a : Instance, inst_b : Instance ) {
-        for interface in inst_a.get_interfaces() {
-            println!( "interface class : {:?}", interface.get_class() );
-            self.add_instance_connection_signals( inst_a.get_name(), inst_b.get_name(), interface );
-        }
-    }
-
-    fn add_instance_connection_signals( & mut self, inst_a_name : & str, inst_b_name : & str, interface : & EntityInterfaceBinding ) {
-        for port in interface.get_ports() {
-            let signal_name = match port.get_direction() {
-                Direction::IN => format!( "{}_to_{}_{}", inst_b_name, inst_a_name, port.get_inner() ),
-                Direction::OUT => format!( "{}_to_{}_{}", inst_a_name, inst_b_name, port.get_inner() ),
-                Direction::INOUT => format!( "{}_to_{}_{}", inst_a_name, inst_b_name, port.get_inner() ),
-                Direction::BUFFER => format!( "{}_to_{}_{}", inst_a_name, inst_b_name, port.get_inner() ),
-            };
-            self.add_signal_declaration( & SignalDeclaraion::new( & signal_name, port.get_data_type() ) );
-        }
     }
 
     fn get_instance_generic_match( & self, binding : & GenericBinding ) -> String {
