@@ -30,6 +30,10 @@ use source_generator::vhdl::instance::Instance;
  *      |                                              |
  *      +----------------------------------------------+
  */
+
+const OUTPUT_FILE : & str =  "tests/vhdl/test_connect_clk_rst.vhd";
+const EXPECTED_FILE : & str =  "tests/vhdl/expected_connect_clk_rst.vhd";
+
 fn main() -> Result< (), Box< dyn Error > > {
     let interface = EntityInterface::from_file_unnamed(
         Path::new( "tests/vhdl/clk_rst.json" ) )?;
@@ -41,7 +45,7 @@ fn main() -> Result< (), Box< dyn Error > > {
     arch.connect_instance_to_entity( "sub_a" )?;
     arch.connect_instance_to_entity( "sub_b" )?;
 
-    let mut vhdl_file = VhdlFile::new( "tests/vhdl/connect_clk_rst.vhd" );
+    let mut vhdl_file = VhdlFile::new( OUTPUT_FILE );
     vhdl_file.add_entity( sub );
     vhdl_file.add_architecture( arch );
     vhdl_file.write()?;
@@ -51,9 +55,14 @@ fn main() -> Result< (), Box< dyn Error > > {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utility::*;
     #[test]
     fn connect_clk_rst() -> Result< (), Box< dyn Error > > {
-        main()
+        {
+            main()?;
+            compare_files_with_header( OUTPUT_FILE, EXPECTED_FILE )?;
+        }
+        Ok(())
     }
 }
 

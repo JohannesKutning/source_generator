@@ -25,6 +25,10 @@ use source_generator::vhdl::instance::Instance;
  *                |                                                                           |
  *                +---------------------------------------------------------------------------+
  */
+
+const OUTPUT_FILE : & str =  "tests/vhdl/test_connect_instances_and_ports.vhd";
+const EXPECTED_FILE : & str =  "tests/vhdl/expected_connect_instances_and_ports.vhd";
+
 fn main() -> Result< (), Box< dyn Error > > {
     let mut host = EntityInterface::from_file( "host",
         Path::new( "tests/vhdl/avalon_mm.json" ) )?;
@@ -46,7 +50,7 @@ fn main() -> Result< (), Box< dyn Error > > {
     arch.connect_instance_unbound_by_name( "left" )?;
     arch.connect_instance_unbound_by_name( "right" )?;
 
-    let mut vhdl_file = VhdlFile::new( "tests/vhdl/connect_instances_and_ports.vhd" );
+    let mut vhdl_file = VhdlFile::new( OUTPUT_FILE );
     vhdl_file.add_entity( sub );
     vhdl_file.add_architecture( arch );
     vhdl_file.write()?;
@@ -56,21 +60,12 @@ fn main() -> Result< (), Box< dyn Error > > {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs::*;
-
+    use crate::utility::*;
     #[test]
     fn connect_instances_and_ports() -> Result< (), Box< dyn Error > > {
         {
             main()?;
-            let actual = read_to_string( "tests/vhdl/connect_instances_and_ports.vhd" )?;
-            let expected = read_to_string( "tests/vhdl/expected_connect_instances_and_ports.vhd" )?;
-            let actual_lines : Vec< _ > = actual.split( "\n" ).collect();
-            let expected_lines : Vec< _ > = expected.split( "\n" ).collect();
-            // Skip line 2 containing the generation date and time
-            for i in 3..expected_lines.len() {
-                assert_eq!( actual_lines[ i ],
-                        expected_lines[ i ], " line {}", i + 1 );
-            }
+            compare_files_with_header( OUTPUT_FILE, EXPECTED_FILE )?;
         }
         Ok(())
     }

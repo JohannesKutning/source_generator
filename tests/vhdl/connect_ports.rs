@@ -33,6 +33,9 @@ use source_generator::vhdl::signal_assignment::SignalAssignment;
  *      +--------------------------------+
  */
 
+const OUTPUT_FILE : & str =  "tests/vhdl/test_connect_ports.vhd";
+const EXPECTED_FILE : & str =  "tests/vhdl/expected_connect_ports.vhd";
+
 fn main() -> Result< (), Box< dyn Error > > {
     let mut main = Entity::new( "main" );
     main.add_port( Port::new( "a", Direction::IN, "std_logic" ) );
@@ -66,7 +69,7 @@ fn main() -> Result< (), Box< dyn Error > > {
     main_arch.connect_instance_to_port_by_name( "u_f_or", "b", "c" )?;
     main_arch.connect_instance_to_port_by_name( "u_f_or", "y", "y" )?;
 
-    let mut vhdl_file = VhdlFile::new( "tests/vhdl/connect_ports.vhd" );
+    let mut vhdl_file = VhdlFile::new( "tests/vhdl/test_connect_ports.vhd" );
     vhdl_file.add_architecture( f_and_arch );
     vhdl_file.add_architecture( f_or_arch );
     vhdl_file.add_architecture( main_arch );
@@ -77,9 +80,14 @@ fn main() -> Result< (), Box< dyn Error > > {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utility::*;
     #[test]
     fn connect_ports() -> Result< (), Box< dyn Error > > {
-        main()
+        {
+            main()?;
+            compare_files_with_header( OUTPUT_FILE, EXPECTED_FILE )?;
+        }
+        Ok(())
     }
 }
 
