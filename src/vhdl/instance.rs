@@ -8,7 +8,7 @@ use crate::vhdl::entity_interface_binding_list::EntityInterfaceBindingList;
 use crate::vhdl::entity_interface_binding::EntityInterfaceBinding;
 use crate::vhdl::generic_binding::GenericBinding;
 use crate::vhdl::keywords::*;
-use crate::vhdl::match_index::MatchIndex;
+use crate::vhdl::match_index::*;
 use crate::vhdl::signal_declaration::SignalDeclaraion;
 
 #[derive(Clone)]
@@ -46,6 +46,11 @@ impl Instance {
         }
     }
 
+    pub fn connect_interface_by_name_to_signal_list( & mut self, name : & str, signal_list : & Vec< SignalDeclaraion > ) {
+        let interface = self.bindings.get_interface_by_name_mut( name ).unwrap();
+        interface.connect_to_signal_list( signal_list );
+    }
+
     pub fn connect_interface_by_index_to_signal_list( & mut self, index : usize, signal_list : & Vec< SignalDeclaraion > ) {
         self.bindings.get_interfaces_mut()[ index ].connect_to_signal_list( signal_list );
     }
@@ -70,6 +75,10 @@ impl Instance {
         & self.bindings.get_interfaces()
     }
 
+    pub fn get_interface_by_name( & self, name : & str ) -> Option< & EntityInterfaceBinding > {
+        self.bindings.get_interface_by_name( name )
+    }
+
     pub fn get_instance_interface_matches( & self, inst_b : & Instance ) -> Vec< ( usize, usize ) > {
         let mut matches = Vec::new();
         for ( idx_a, interface_a ) in self.get_interfaces().iter().enumerate() {
@@ -79,7 +88,6 @@ impl Instance {
             }
             if match_index.is_match() {
                 matches.push( ( idx_a, match_index.position() ) );
-                println!( "    match {} {}", idx_a, match_index.position() );
             }
         }
         return matches;
@@ -130,6 +138,9 @@ impl Instance {
 
     fn get_match_strength( instance : & EntityInterfaceBinding, entity : & EntityInterface )
             -> u32 {
+        if instance.is_bound() {
+            return NONE;
+        }
         let instance_name = instance.get_name().to_string().to_lowercase();
         let entity_name = entity.get_name().to_string().to_lowercase();
         let class_match : bool = instance.get_class() == entity.get_class();
@@ -137,17 +148,21 @@ impl Instance {
         let instance_in_entity = entity_name.contains( & instance_name );
         let entity_in_instance = instance_name.contains( & entity_name );
         if class_match && name_match {
-            return 3;
+            return FULL;
         }
         else if instance_in_entity || entity_in_instance {
-            return 2;
+            return PARTIAL;
         }
         else if class_match {
-            return 1;
+            return CLASS;
         }
         else {
-            return 0;
+            return NONE;
         }
+    }
+
+    pub fn contains_interface( & self, name : & str ) -> bool {
+        self.bindings.contains_interface( name )
     }
 }
 

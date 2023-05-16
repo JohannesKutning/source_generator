@@ -26,6 +26,15 @@ impl EntityInterfaceBindingList {
         & mut self.interfaces
     }
 
+    pub fn get_interface_by_name_mut( & mut self, name : & str ) -> Option< & mut EntityInterfaceBinding > {
+        for interface in & mut self.interfaces {
+            if interface.get_name() == name {
+                return Some( interface );
+            }
+        }
+        None
+    }
+
     pub fn get_generic_mut( & mut self, name : & str ) -> Result< & mut GenericBinding, VhdlError > {
         for interface in & mut self.interfaces {
             if interface.contains_generic( name ) {
@@ -42,6 +51,24 @@ impl EntityInterfaceBindingList {
             }
         }
         Err( VhdlError::new( & format!( "error: Port {:?} not found!", name ) ) )
+    }
+
+    pub fn contains_interface( & self, name : & str ) -> bool {
+        for interface in & self.interfaces {
+            if interface.get_name() == name {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    pub fn get_interface_by_name( & self, name : & str ) -> Option< & EntityInterfaceBinding > {
+        for interface in & self.interfaces {
+            if interface.get_name() == name {
+                return Some( interface );
+            }
+        }
+        return None;
     }
 }
 

@@ -4,6 +4,8 @@ use crate::element::Element;
 #[derive(Deserialize, Debug, Clone)]
 pub struct Generic {
     name : String,
+    #[serde(default)]
+    interface : String,
     data_type : String,
     #[serde(default)]
     default : String
@@ -12,24 +14,41 @@ pub struct Generic {
 impl Generic {
     pub fn new( name : & str, data_type : & str )
             -> Generic  {
-        Generic{ name : name.to_string(), data_type : data_type.to_string(),
-                default : String::new() }
+        Generic{ name : name.to_string(), interface : String::new(),
+            data_type : data_type.to_string(), default : String::new() }
 
     }
 
     pub fn new_with_default( name : & str, data_type : & str,
             default : & str ) -> Generic  {
-        Generic{ name : name.to_string(), data_type : data_type.to_string(),
-                default : default.to_string() }
+        Generic{ name : name.to_string(), interface : String::new(),
+            data_type : data_type.to_string(), default : default.to_string() }
 
     }
 
-    pub fn get_name( & self ) -> & String {
-        & self.name
+    pub fn get_name( & self ) -> String {
+        if ! self.interface.is_empty() {
+            format!( "{}_{}", self.interface, self.name )
+        }
+        else {
+            format!( "{}", self.name )
+        }
     }
 
     pub fn set_name( & mut self, name : & str ) {
         self.name = name.to_string();
+    }
+
+    pub fn set_interface( & mut self, interface : & str ) {
+        self.interface = interface.to_string();
+    }
+
+    pub fn get_interface( & mut self ) -> & String {
+        & self.interface
+    }
+
+    pub fn remove_interface( & mut self ) {
+        self.interface.clear();
     }
 
     pub fn get_data_type( & self ) -> & String {
@@ -45,7 +64,7 @@ impl Element for Generic {
     fn to_source_code( & self, indent : usize ) -> String {
         let mut source = String::new();
         let indent_str = crate::util::indent( indent );
-        source.push_str( & format!( "{}{} : {}", indent_str, self.name,
+        source.push_str( & format!( "{}{} : {}", indent_str, self.get_name(),
                 self.data_type ) );
 
         if ! self.default.is_empty() {

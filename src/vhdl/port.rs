@@ -5,6 +5,8 @@ use crate::element::Element;
 #[derive(Deserialize, Debug, Clone)]
 pub struct Port {
     name : String,
+    #[serde(default)]
+    interface : String,
     direction : Direction,
     data_type : String,
     #[serde(default)]
@@ -14,15 +16,15 @@ pub struct Port {
 impl Port {
     pub fn new( name : & str, direction : Direction, data_type : & str )
             -> Port  {
-        Port{ name : name.to_string(), direction : direction, data_type : data_type.to_string(),
-                default : String::new() }
+        Port{ name : name.to_string(), interface : String::new(), direction : direction,
+            data_type : data_type.to_string(), default : String::new() }
 
     }
 
     pub fn new_with_default( name : & str, direction : Direction, data_type : & str,
             default : & str ) -> Port  {
-        Port{ name : name.to_string(), direction : direction, data_type : data_type.to_string(),
-                default : default.to_string() }
+        Port{ name : name.to_string(), interface : String::new(), direction : direction,
+            data_type : data_type.to_string(), default : default.to_string() }
     }
 
     pub fn clone_inverted( & self ) -> Port {
@@ -30,8 +32,25 @@ impl Port {
             & self.default )
     }
 
-    pub fn get_name( & self ) -> & String {
-        & self.name
+    pub fn get_name( & self ) -> String {
+        if ! self.interface.is_empty() {
+            format!( "{}_{}", self.interface, self.name )
+        }
+        else {
+            format!( "{}", self.name )
+        }
+    }
+
+    pub fn set_name( & mut self, name : & str ) {
+        self.name = name.to_string();
+    }
+
+    pub fn get_interface( & self ) -> & String {
+        & self.interface
+    }
+
+    pub fn set_interface( & mut self, interface : & str ) {
+        self.interface = interface.to_string();
     }
 
     pub fn get_direction( & self ) -> Direction {
@@ -40,10 +59,6 @@ impl Port {
 
     pub fn get_data_type( & self ) -> & String {
         & self.data_type
-    }
-
-    pub fn set_name( & mut self, name : & str ) {
-        self.name = name.to_string();
     }
 
     pub fn invert( & mut self ) {
@@ -55,9 +70,8 @@ impl Element for Port {
     fn to_source_code( & self, indent : usize ) -> String {
         let mut source = String::new();
         let indent_str = crate::util::indent( indent );
-        source.push_str( & format!( "{}{} : {} {}", indent_str, self.name, self.direction,
-                self.data_type ) );
-
+        source.push_str( & format!( "{}{} : {} {}", indent_str, self.get_name(),
+            self.direction, self.data_type ) );
         if ! self.default.is_empty() {
             source.push_str( & format!( " := {}", self.default ) );
         }

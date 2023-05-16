@@ -3,6 +3,7 @@ use crate::vhdl::port_binding::PortBinding;
 use crate::vhdl::entity_interface::EntityInterface;
 use crate::vhdl::direction::Direction;
 use crate::vhdl::signal_declaration::SignalDeclaraion;
+use crate::vhdl::match_index::*;
 
 #[derive(Clone)]
 pub struct EntityInterfaceBinding {
@@ -10,6 +11,7 @@ pub struct EntityInterfaceBinding {
     class : String,
     generics : Vec< GenericBinding >,
     ports : Vec< PortBinding >,
+    bound : bool,
 }
 
 impl EntityInterfaceBinding {
@@ -18,7 +20,9 @@ impl EntityInterfaceBinding {
                 name : interface.get_name().to_string(),
                 class : interface.get_class().to_string(),
                 generics : EntityInterfaceBinding::generic_bindings_from_interface( interface ),
-                ports : EntityInterfaceBinding::port_bindings_from_interface( interface ) }
+                ports : EntityInterfaceBinding::port_bindings_from_interface( interface ),
+                bound : false,
+        }
     }
 
     pub fn get_name( & self ) -> & String {
@@ -51,6 +55,14 @@ impl EntityInterfaceBinding {
         & self.ports
     }
 
+    pub fn is_bound( & self ) -> bool {
+        self.bound
+    }
+
+    pub fn is_unbound( & self ) -> bool {
+        ! self.is_bound()
+    }
+
     pub fn connect_to_entity_interface( & mut self, entity : & EntityInterface ) {
         let mut idx = 0;
         for generic in & mut self.generics {
@@ -62,6 +74,7 @@ impl EntityInterfaceBinding {
             port.connect( & entity.get_ports()[ idx ] );
             idx += 1;
         }
+        self.bound = true;
     }
 
     pub fn contains_generic( & self, name : & str ) -> bool {
@@ -91,6 +104,9 @@ impl EntityInterfaceBinding {
     }
 
     pub fn get_entity_matching( & self, entity : & EntityInterface ) -> u32 {
+        if self.bound {
+            return NONE;
+        }
         let instance_name = self.get_name().to_string().to_lowercase();
         let entity_name = entity.get_name().to_string().to_lowercase();
         let class_match : bool = self.get_class() == entity.get_class();
@@ -98,20 +114,23 @@ impl EntityInterfaceBinding {
         let instance_in_entity = entity_name.contains( & instance_name );
         let entity_in_instance = instance_name.contains( & entity_name );
         if class_match && name_match {
-            return 3;
+            return FULL;
         }
         else if instance_in_entity || entity_in_instance {
-            return 2;
+            return PARTIAL;
         }
         else if class_match {
-            return 1;
+            return CLASS;
         }
         else {
-            return 0;
+            return NONE;
         }
     }
 
     pub fn get_instance_matching( & self, inst_b : & EntityInterfaceBinding ) -> u32 {
+        if self.bound {
+            return NONE;
+        }
         let inst_a_name = self.get_name().to_string().to_lowercase();
         let inst_b_name = inst_b.get_name().to_string().to_lowercase();
         let class_match : bool = self.get_class() == inst_b.get_class();
@@ -119,16 +138,16 @@ impl EntityInterfaceBinding {
         let inst_a_in_inst_b = inst_b_name.contains( & inst_a_name );
         let inst_b_in_inst_a = inst_a_name.contains( & inst_b_name );
         if class_match && name_match {
-            return 3;
+            return FULL;
         }
-        else if inst_a_in_inst_b || inst_b_in_inst_a {
-            return 2;
+        else if class_match && inst_a_in_inst_b || inst_b_in_inst_a {
+            return PARTIAL;
         }
         else if class_match {
-            return 1;
+            return CLASS;
         }
         else {
-            return 0;
+            return NONE;
         }
     }
 
@@ -152,6 +171,7 @@ impl EntityInterfaceBinding {
         for ( idx, port ) in self.ports.iter_mut().enumerate() {
             port.connect_by_name( signal_list[ idx ].get_name() );
         }
+        self.bound = true;
     }
 
     fn generic_bindings_from_interface( interface : & EntityInterface ) -> Vec< GenericBinding > {

@@ -227,18 +227,12 @@ mod tests {
         "        d : buffer positive\n",
         "    );\n" );
 
-    /**
-     * Create a entity with no description and content.
-     */
     #[test]
     fn entity_frame() {
         let entity = Entity::new( NAME );
         assert_eq!( entity.to_source_code( 0 ), format!( "{}{}{}", HEADER, BEGIN, END ));
     }
 
-    /**
-     * Create a entity with description but no content.
-     */
     #[test]
     fn entity_with_description() {
         let mut entity = Entity::new( NAME );
@@ -250,9 +244,6 @@ mod tests {
         );
     }
 
-    /**
-     * Create a entity with description and a port list.
-     */
     #[test]
     fn entity_with_ports() {
         let mut entity = Entity::new( NAME );
@@ -268,9 +259,6 @@ mod tests {
         );
     }
 
-    /**
-     * Create a entity with description and a port list.
-     */
     #[test]
     fn entity_with_generics_and_ports() {
         let mut entity = Entity::new( NAME );
@@ -285,9 +273,6 @@ mod tests {
                 format!( "{}{}{}{}{}{}{}", USE_STD_LOGIC_1164, DESCRIPTION, HEADER, GENERICS, PORTS, BEGIN, END ) );
     }
 
-    /**
-     * Create an entity with an interface
-     */
     #[test]
     fn entity_with_interface() -> Result< (), Box< dyn Error > > {
         let interface = EntityInterface::from_file_unnamed(

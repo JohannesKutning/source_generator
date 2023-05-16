@@ -60,6 +60,13 @@ impl EntityInterface {
         return inverted;
     }
 
+    pub fn clone_inverted_with_rename( & self, name : & str ) -> EntityInterface {
+        let mut inverted = self.clone();
+        inverted.invert();
+        inverted.rename( name );
+        return inverted;
+    }
+
     pub fn get_name( & self ) -> & String {
         & self.name
     }
@@ -89,6 +96,12 @@ impl EntityInterface {
 
     pub fn rename( & mut self, name : & str ) {
         self.name = name.to_string();
+        for generic in & mut self.generics {
+            generic.set_interface( & self.name );
+        }
+        for port in & mut self.ports {
+            port.set_interface( & self.name );
+        }
     }
 
     pub fn invert( & mut self ) {
@@ -100,6 +113,16 @@ impl EntityInterface {
 
     pub fn add_generic( & mut self, generic : Generic ) {
         self.generics.push( generic );
+    }
+
+    pub fn remove_generics( & mut self ) {
+        self.generics.clear();
+    }
+
+    pub fn remove_interface_from_generics( & mut self ) {
+        for generic in & mut self.generics {
+            generic.remove_interface();
+        }
     }
 
     pub fn add_port( & mut self, port : Port ) {

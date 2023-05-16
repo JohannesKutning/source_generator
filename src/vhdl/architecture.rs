@@ -38,6 +38,7 @@ impl Architecture {
     }
 
     pub fn add_signal_declaration( & mut self, signal : & SignalDeclaraion ) {
+        println!( "add_signal_declaration: {}", signal.get_name() );
         self.entity.add_missing_library_use( signal.get_data_type() );
         self.declarations.add_signal( signal );
     }
@@ -61,6 +62,7 @@ impl Architecture {
     }
 
     pub fn connect_instance_to_entity( & mut self, name : & str ) -> Result< (), VhdlError > {
+        println!( "Architecture::connect_instance_to_entity" );
         self.requires_instance( name )?;
         self.instances.get_mut( name ).unwrap().connect_to_entity( & self.entity );
         Ok(())
@@ -68,7 +70,7 @@ impl Architecture {
 
     pub fn connect_instance_to_instance( & mut self, inst_name_a : & str, inst_name_b: & str )
             -> Result< (), VhdlError > {
-        println!( "connect_instance_to_instance {} {}", inst_name_a, inst_name_b );
+        println!( "Architecture::connect_instance_to_instance {} {}", inst_name_a, inst_name_b );
         let matches;
         {
             self.requires_instance( inst_name_a )?;
@@ -98,6 +100,51 @@ impl Architecture {
             for signal_list in & connection_signal_lists {
                 self.add_signal_declaration_list( signal_list );
             }
+        }
+        Ok(())
+    }
+
+    pub fn connect_instance_to_instance_by_interface( & mut self,
+            inst_name_a : & str, inst_name_b: & str,
+            if_name_a : & str, if_name_b : & str )
+            -> Result< (), VhdlError > {
+        println!( "Architecture::connect_instance_to_instance_by_interface {} {} {} {}", inst_name_a, inst_name_b, if_name_a, if_name_b );
+        let match_index;
+        {
+            self.requires_instance( inst_name_a )?;
+            self.requires_instance( inst_name_b )?;
+            let inst_a : & Instance = self.instances.get( inst_name_a ).unwrap();
+            let inst_b : & Instance = self.instances.get( inst_name_b ).unwrap();
+            // find a list of matching interfaces
+            self.requires_interface_in_instance( inst_a, if_name_a )?;
+            self.requires_interface_in_instance( inst_b, if_name_b )?;
+            if ! inst_b.contains_interface( if_name_b ) {
+                return Err( VhdlError::new( & format!( "error: Interface {:?} not found in instance {:?} of architecture {:?}!",
+                        if_name_a, inst_name_a, self.name ) ) );
+            }
+            let interface_a = inst_a.get_interface_by_name( if_name_a ).unwrap();
+            let interface_b = inst_b.get_interface_by_name( if_name_b ).unwrap();
+            match_index = interface_a.get_instance_matching( interface_b );
+            println!( "match_index : {}", match_index );
+            if match_index == crate::vhdl::match_index::NONE {
+                return Err( VhdlError::new( & format!( "error: Interface classes of {:?} and {:?} do not match!",
+                        if_name_a, if_name_b ) ) );
+            }
+        }
+        let connection_signal_list : Vec< SignalDeclaraion >;
+        {
+            let inst : & mut Instance = self.instances.get_mut( inst_name_a ).unwrap();
+            let interface_a : & EntityInterfaceBinding = & inst.get_interface_by_name( if_name_a ).unwrap();
+            let signal_list = interface_a.get_connection_signal_list( inst_name_a, inst_name_b );
+            inst.connect_interface_by_name_to_signal_list( if_name_a, & signal_list );
+            connection_signal_list = signal_list;
+        }
+        {
+            let inst : & mut Instance = self.instances.get_mut( inst_name_b ).unwrap();
+            inst.connect_interface_by_name_to_signal_list( if_name_b, & connection_signal_list );
+        }
+        {
+            self.add_signal_declaration_list( & connection_signal_list );
         }
         Ok(())
     }
@@ -168,6 +215,14 @@ impl Architecture {
         if ! self.instances.contains_key( name ) {
             return Err( VhdlError::new( & format!( "error: Instance {:?} not found in architecture {:?}!",
                     name, self.name ) ) );
+        }
+        Ok(())
+    }
+
+    fn requires_interface_in_instance( & self, inst : & Instance, name : & str ) -> Result< (), VhdlError > {
+        if ! inst.contains_interface( name ) {
+            return Err( VhdlError::new( & format!( "error: Interface {:?} not found in instance {:?} of architecture {:?}!",
+                    name, inst.get_name(), self.name ) ) );
         }
         Ok(())
     }

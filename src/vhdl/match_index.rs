@@ -1,3 +1,8 @@
+pub static NONE : u32 = 0;
+pub static CLASS : u32 = 1;
+pub static PARTIAL : u32 = 2;
+pub static FULL : u32 = 3;
+
 pub struct MatchIndex {
     pub index : usize,
     pub strength : u32,
